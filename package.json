@@ -15,8 +15,12 @@
     "worker",
     "multi-worker"
   ],
-  "author": "Kyi Moe Min",
+  "author": "Kyi Moe Min <kyimoemin0@gmail.com>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kyimoemin/async-multi-worker.git"
+  },
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "jest": "^30.0.5",
