@@ -1,0 +1,24 @@
+{
+  "name": "async-multi-worker",
+  "version": "1.0.0",
+  "description": "Use worker as simple asynchronous function",
+  "main": "dist/index.js",
+  "scripts": {
+    "test": "jest"
+  },
+  "keywords": [
+    "async-worker",
+    "async-multi-worker",
+    "async",
+    "worker",
+    "multi-worker"
+  ],
+  "author": "Kyi Moe Min",
+  "license": "MIT",
+  "devDependencies": {
+    "@types/jest": "^30.0.0",
+    "jest": "^30.0.5",
+    "ts-jest": "^29.4.0",
+    "typescript": "^5.8.3"
+  }
+}
