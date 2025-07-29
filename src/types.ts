@@ -1,4 +1,4 @@
-export type FunctionsRecord = Record<string | number, (...args: any[]) => any>;
+export type FunctionsRecord = Record<string, any>;
 
 export type RequestPayload<Params extends unknown[]> = {
   func: string | number;

@@ -1,7 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import type { ResponsePayload, FunctionsRecord, WorkerProxy } from "./types";
 import { WorkerInfo, WorkerManager } from "./worker-manager";
-import { randomUUID } from "node:crypto";
 
 /**
  * A generic handler for making asynchronous function calls to a Web Worker.
@@ -64,7 +63,7 @@ export class DynamicWorker<T extends FunctionsRecord>
   func = <K extends keyof T>(funcName: K, timeoutMs: number = 5000) => {
     return (...args: Parameters<T[K]>) =>
       new Promise<ReturnType<T[K]>>((resolve, reject) => {
-        const id = randomUUID();
+        const id = crypto.randomUUID();
 
         const workerInfo = this.workerManager.getWorker();
 
