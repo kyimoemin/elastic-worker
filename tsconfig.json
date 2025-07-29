@@ -9,5 +9,5 @@
     "skipLibCheck": true,
     "declaration": true
   },
-  "include": ["src", "examples"]
+  "include": ["src"]
 }
