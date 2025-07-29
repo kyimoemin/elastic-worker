@@ -14,7 +14,7 @@ import { randomUUID } from "node:crypto";
  * @see func for calling worker functions
  * @see terminate for cleanup
  */
-export class MultiWorkerProxy<T extends WorkerObject> {
+export class DynamicWorker<T extends WorkerObject> {
   private workerManager: WorkerManager;
 
   constructor(workerURL: URL) {
