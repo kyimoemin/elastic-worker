@@ -1,10 +1,7 @@
-export type WorkerObject = Record<
-  string | number | symbol,
-  (...args: any[]) => any
->;
+export type FunctionsRecord = Record<string | number, (...args: any[]) => any>;
 
 export type RequestPayload<Params extends unknown[]> = {
-  func: string | number | symbol;
+  func: string | number;
   args: Params;
   id: string;
 };
@@ -21,7 +18,7 @@ export type ErrorPayload = {
   name: string;
 };
 
-export interface WorkerProxy<T extends WorkerObject> {
+export interface WorkerProxy<T extends FunctionsRecord> {
   func<K extends keyof T>(
     funcName: K
   ): (...args: Parameters<T[K]>) => Promise<ReturnType<T[K]>>;

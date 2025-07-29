@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { ResponsePayload, WorkerObject, WorkerProxy } from "./types";
+import type { ResponsePayload, FunctionsRecord, WorkerProxy } from "./types";
 import { WorkerInfo, WorkerManager } from "./worker-manager";
 import { randomUUID } from "node:crypto";
 
@@ -9,12 +9,14 @@ import { randomUUID } from "node:crypto";
  * This class manages communication between the main thread and a worker, allowing you to call worker-exposed functions as Promises.
  * It handles message passing, result/error propagation, timeouts, and worker cleanup.
  *
- * @template T - The type describing the functions exposed by the worker (should extend WorkerObject).
+ * @template T - The type describing the functions exposed by the worker (should extend FunctionsRecord).
  *
  * @see func for calling worker functions
  * @see terminate for cleanup
  */
-export class DynamicWorker<T extends WorkerObject> implements WorkerProxy<T> {
+export class DynamicWorker<T extends FunctionsRecord>
+  implements WorkerProxy<T>
+{
   private workerManager: WorkerManager;
 
   constructor(workerURL: URL) {

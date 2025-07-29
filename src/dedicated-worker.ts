@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { ResponsePayload, WorkerObject, WorkerProxy } from "./types";
+import { ResponsePayload, FunctionsRecord, WorkerProxy } from "./types";
 
 type Calls = {
   resolve: (result?: any) => void;
@@ -13,12 +13,14 @@ type Calls = {
  * This class manages communication between the main thread and a worker, allowing you to call worker-exposed functions as Promises.
  * It handles message passing, result/error propagation, timeouts, and worker cleanup.
  *
- * @template T - The type describing the functions exposed by the worker (should extend WorkerObject).
+ * @template T - The type describing the functions exposed by the worker (should extend FunctionsRecord).
  *
  * @see func for calling worker functions
  * @see terminate for cleanup
  */
-export class DedicatedWorker<T extends WorkerObject> implements WorkerProxy<T> {
+export class DedicatedWorker<T extends FunctionsRecord>
+  implements WorkerProxy<T>
+{
   private calls = new Map<string, Calls>();
   private worker: Worker;
 
