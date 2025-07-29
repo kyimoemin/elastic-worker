@@ -101,7 +101,7 @@ export class WorkerManager {
    *
    * ! be cautious when using this method, as it will stop all ongoing tasks.
    */
-  cleanup = () => {
+  terminateAllWorkers = () => {
     console.warn("Terminating and cleaning up all workers");
     for (const workerInfo of this.workers.values()) {
       workerInfo.worker.terminate();

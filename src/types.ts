@@ -20,3 +20,10 @@ export type ErrorPayload = {
   stack?: string;
   name: string;
 };
+
+export interface WorkerProxy<T extends WorkerObject> {
+  func<K extends keyof T>(
+    funcName: K
+  ): (...args: Parameters<T[K]>) => Promise<ReturnType<T[K]>>;
+  terminate(): void;
+}

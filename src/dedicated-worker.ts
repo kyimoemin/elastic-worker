@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { ResponsePayload, WorkerObject } from "./types";
+import { ResponsePayload, WorkerObject, WorkerProxy } from "./types";
 
 type Calls = {
   resolve: (result?: any) => void;
@@ -15,19 +15,10 @@ type Calls = {
  *
  * @template T - The type describing the functions exposed by the worker (should extend WorkerObject).
  *
- * @example
- *
- * ```typescript
- * // Suppose your worker exposes an 'add' function:
- * type MyWorker = { add: (a: number, b: number) => number };
- * const handler = new DedicatedWorker<MyWorker>(workerUrl);
- * const add = handler.func('add');
- * const result = await add(1, 2); // result is 3
- * ```
  * @see func for calling worker functions
  * @see terminate for cleanup
  */
-export class DedicatedWorker<T extends WorkerObject> {
+export class DedicatedWorker<T extends WorkerObject> implements WorkerProxy<T> {
   private calls = new Map<string, Calls>();
   private worker: Worker;
 
@@ -77,9 +68,6 @@ export class DedicatedWorker<T extends WorkerObject> {
    * @param timeoutMs - Optional timeout in milliseconds (default: 5000ms).
    * @returns A function that, when called with arguments, returns a Promise resolving to the result of the worker function.
    *
-   * @example
-   * const add = handler.func('add');
-   * const result = await add(1, 2);
    */
   func = <K extends keyof T>(funcName: K) => {
     return (...args: Parameters<T[K]>) =>
@@ -89,6 +77,11 @@ export class DedicatedWorker<T extends WorkerObject> {
         this.worker.postMessage({ func: funcName, args, id });
       });
   };
+
+  get busy() {
+    return this.calls.size > 0;
+  }
+
   /**
    * Terminates the worker and cleans up all pending calls.
    * This method removes all event listeners and clears the calls map.

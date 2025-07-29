@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { ResponsePayload, WorkerObject } from "./types";
+import type { ResponsePayload, WorkerObject, WorkerProxy } from "./types";
 import { WorkerInfo, WorkerManager } from "./worker-manager";
 import { randomUUID } from "node:crypto";
 
@@ -14,7 +14,7 @@ import { randomUUID } from "node:crypto";
  * @see func for calling worker functions
  * @see terminate for cleanup
  */
-export class DynamicWorker<T extends WorkerObject> {
+export class DynamicWorker<T extends WorkerObject> implements WorkerProxy<T> {
   private workerManager: WorkerManager;
 
   constructor(workerURL: URL) {
@@ -93,6 +93,6 @@ export class DynamicWorker<T extends WorkerObject> {
    * ! Keep in mind that this will stop all workers including the workers with ongoing calls.
    */
   terminate = () => {
-    this.workerManager.cleanup();
+    this.workerManager.terminateAllWorkers();
   };
 }

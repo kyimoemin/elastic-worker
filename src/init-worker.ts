@@ -28,4 +28,12 @@ export const initWorker = <T extends WorkerObject>(obj: T) => {
       self.postMessage(response);
     }
   };
+  self.onclose = () => {
+    self.postMessage({
+      error: {
+        message: "Worker has been closed.",
+        name: "WorkerClosedError",
+      },
+    });
+  };
 };
