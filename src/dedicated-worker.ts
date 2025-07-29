@@ -68,6 +68,9 @@ export class DedicatedWorker<T extends WorkerObject> implements WorkerProxy<T> {
    * @param timeoutMs - Optional timeout in milliseconds (default: 5000ms).
    * @returns A function that, when called with arguments, returns a Promise resolving to the result of the worker function.
    *
+   * @example
+   * const add = workerProxy.func('add');
+   * const result = await add(1, 2);
    */
   func = <K extends keyof T>(funcName: K) => {
     return (...args: Parameters<T[K]>) =>

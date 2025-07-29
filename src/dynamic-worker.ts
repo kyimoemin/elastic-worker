@@ -56,7 +56,7 @@ export class DynamicWorker<T extends WorkerObject> implements WorkerProxy<T> {
    * @returns A function that, when called with arguments, returns a Promise resolving to the result of the worker function.
    *
    * @example
-   * const add = handler.func('add');
+   * const add = workerProxy.func('add');
    * const result = await add(1, 2);
    */
   func = <K extends keyof T>(funcName: K, timeoutMs: number = 5000) => {
