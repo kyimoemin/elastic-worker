@@ -11,19 +11,10 @@ import { randomUUID } from "node:crypto";
  *
  * @template T - The type describing the functions exposed by the worker (should extend WorkerObject).
  *
- * @example
- *
- * ```typescript
- * // Suppose your worker exposes an 'add' function:
- * type MyWorker = { add: (a: number, b: number) => number };
- * const handler = new WorkerProxy<MyWorker>(workerUrl);
- * const add = handler.func('add');
- * const result = await add(1, 2); // result is 3
- * ```
  * @see func for calling worker functions
  * @see terminate for cleanup
  */
-export class WorkerProxy<T extends WorkerObject> {
+export class MultiWorkerProxy<T extends WorkerObject> {
   private workerManager: WorkerManager;
 
   constructor(workerURL: URL) {
