@@ -18,6 +18,8 @@ jobs:
 
       - run: npm ci
 
+      - run: npm pkg fix
+
       - run: npm run build
 
       - run: npm publish
