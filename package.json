@@ -20,6 +20,9 @@
     "type": "git",
     "url": "https://github.com/kyimoemin/async-multi-worker.git"
   },
+  "publishConfig": {
+    "registry": "https://registry.npmjs.org/"
+  },
   "devDependencies": {
     "@types/jest": "^30.0.0",
     "jest": "^30.0.5",
