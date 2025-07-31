@@ -1,5 +1,5 @@
 /**
- * Manages a pool of Web Workers, optimizing resource usage by limiting the number of non-busy workers.
+ * Manages a pool of Workers, optimizing resource usage by limiting the number of non-busy workers.
  * Provides methods to spawn, reuse, terminate, and clean up workers.
  *
  * ## Usage Example
@@ -19,7 +19,7 @@
  * manager.terminateWorker(worker);
  *
  * // 5. Cleanup all workers when done
- * manager.cleanup();
+ * manager.terminateAllWorkers();
  * ```
  *
  */
@@ -30,7 +30,7 @@ export class WorkerManager {
    */
   public readonly MAX_NON_BUSY_WORKERS: number;
 
-  private workers: Map<Worker, WorkerInfo> = new Map();
+  private workers = new Map<Worker, WorkerInfo>();
 
   private readonly workerURL: URL;
 
