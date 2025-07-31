@@ -1,10 +1,15 @@
+import { isBrowser } from "./constants";
 import type { RequestPayload, ResponsePayload, FunctionsRecord } from "./types";
 
 /**
  *
  * @param obj Object containing functions to be called in the worker.
  */
-export const initWorker = <T extends FunctionsRecord>(obj: T) => {
+export const initWebWorker = <T extends FunctionsRecord>(obj: T) => {
+  if (!isBrowser)
+    throw new Error(
+      "Unsupported environment: `initWebWorker` can only be used in browser environments. if you want to use it in Node.js, please use `initNodeWorker` instead."
+    );
   self.onmessage = async (event) => {
     const { func, args, id } = event.data as RequestPayload<
       Parameters<T[keyof T]>
