@@ -11,6 +11,7 @@ describe("dist/worker/index.js", () => {
     const workerURL = new URL("./dummy-worker.js", import.meta.url);
     // getWorker should not throw and should return an object with UniversalWorker methods
     const worker = getWorker(workerURL);
+    expect(worker.constructor.name).toBe("NodeWorker");
     expect(worker).toBeDefined();
     expect(typeof worker.postMessage).toBe("function");
     expect(typeof worker.terminate).toBe("function");

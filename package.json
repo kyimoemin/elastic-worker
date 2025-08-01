@@ -7,7 +7,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test": "vitest"
+    "test-node": "vitest",
+    "test-web": "vitest --browser"
   },
   "keywords": [
     "async-worker",
@@ -26,6 +27,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "devDependencies": {
+    "@vitest/browser": "^3.2.4",
     "typescript": "^5.8.3",
     "vitest": "^3.2.4"
   }
