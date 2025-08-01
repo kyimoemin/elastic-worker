@@ -43,10 +43,7 @@ export class DedicatedWorker<T extends FunctionsRecord>
       }
       this.calls.delete(id);
     };
-
-    this.worker.addEventListener("error", this.cleanup);
-    this.worker.addEventListener("exit", this.cleanup);
-    this.worker.addEventListener("close", this.cleanup);
+    this.worker.onerror = this.cleanup;
   }
 
   private spawnWorker = () => {
@@ -93,9 +90,6 @@ export class DedicatedWorker<T extends FunctionsRecord>
    * It should be called when the worker is no longer needed to prevent memory leaks.
    */
   terminate = () => {
-    this.worker.removeEventListener("error", this.cleanup);
-    this.worker.removeEventListener("exit", this.cleanup);
-    this.worker.removeEventListener("close", this.cleanup);
     this.cleanup();
     this.worker.terminate();
   };
