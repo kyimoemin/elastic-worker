@@ -2,10 +2,12 @@
   "name": "async-multi-worker",
   "version": "1.0.9",
   "description": "Use worker as simple asynchronous function",
+  "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
-    "build": "tsc"
+    "build": "tsc",
+    "test": "vitest"
   },
   "keywords": [
     "async-worker",
@@ -24,6 +26,7 @@
     "registry": "https://registry.npmjs.org/"
   },
   "devDependencies": {
-    "typescript": "^5.8.3"
+    "typescript": "^5.8.3",
+    "vitest": "^3.2.4"
   }
 }
