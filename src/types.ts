@@ -36,3 +36,8 @@ export interface UniversalWorker {
 
   terminate(): void;
 }
+
+export interface Host {
+  postMessage: (message: any) => void;
+  onmessage: (event: { data: any }) => void;
+}

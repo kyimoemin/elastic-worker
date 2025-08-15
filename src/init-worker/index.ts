@@ -4,6 +4,8 @@ import type {
   ResponsePayload,
   FunctionsRecord,
 } from "../types";
+import { BrowserHost } from "./browser-host";
+import { NodeHost } from "./node-host";
 
 /**
  *
@@ -38,7 +40,7 @@ export const initWorker = <T extends FunctionsRecord>(obj: T) => {
 
 function getHost() {
   if (isBrowser()) {
-    return new WebHost();
+    return new BrowserHost();
   } else if (isNode()) {
     const { isMainThread } = require("worker_threads");
     if (isMainThread)
@@ -50,33 +52,4 @@ function getHost() {
   throw new Error(
     "Unsupported environment: `initWorker` can only be used in Node.js or browser environments."
   );
-}
-
-interface Host {
-  postMessage: (message: any) => void;
-  onmessage: (event: { data: any }) => void;
-}
-
-class NodeHost implements Host {
-  readonly postMessage: (message: any) => void;
-  private readonly parentPort = require("worker_threads").parentPort;
-  constructor() {
-    const { parentPort } = require("worker_threads");
-    this.postMessage = parentPort?.postMessage;
-  }
-
-  set onmessage(callback: (event: { data: any }) => void) {
-    this.parentPort.on("message", callback);
-  }
-}
-
-class WebHost implements Host {
-  readonly postMessage: (message: any) => void;
-  constructor() {
-    this.postMessage = self.postMessage;
-  }
-
-  set onmessage(callback: (event: { data: any }) => void) {
-    self.onmessage = callback;
-  }
 }
