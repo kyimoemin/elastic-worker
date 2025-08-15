@@ -7,8 +7,8 @@
   "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
-    "test-node": "vitest",
-    "test-web": "vitest --browser"
+    "test-node": "vitest  --environment=node tests/node",
+    "test-web": "vitest --environment=jsdom tests/browser"
   },
   "keywords": [
     "async-worker",
@@ -28,6 +28,7 @@
   },
   "devDependencies": {
     "@vitest/browser": "^3.2.4",
+    "jsdom": "^26.1.0",
     "typescript": "^5.8.3",
     "vitest": "^3.2.4"
   }

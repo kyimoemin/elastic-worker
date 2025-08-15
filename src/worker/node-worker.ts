@@ -6,7 +6,7 @@ export class NodeWorker implements UniversalWorker {
   private worker: Worker;
 
   constructor(workerURL: URL) {
-    if (!isNode) {
+    if (!isNode()) {
       throw new Error("NodeWorker can only be used in a Node.js environment.");
     }
     const { Worker } = require("worker_threads");

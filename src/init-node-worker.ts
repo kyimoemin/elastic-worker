@@ -7,7 +7,7 @@ export const initNodeWorker = <T extends FunctionsRecord>(obj: T) => {
     throw new Error(
       "`initNodeWorker` should be called in a worker thread context not in the main thread."
     );
-  if (!isNode)
+  if (!isNode())
     throw new Error(
       "Unsupported environment: `initNodeWorker` can only be used in Node.js environments. If you want to use it in the browser, please use `initWebWorker` instead."
     );

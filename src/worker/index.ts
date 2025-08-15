@@ -9,9 +9,9 @@ import { NodeWorker } from "./node-worker";
  * @returns
  */
 export function getWorker(workerURL: URL): UniversalWorker {
-  if (isBrowser) {
+  if (isBrowser()) {
     return new BrowserWorker(workerURL);
-  } else if (isNode) {
+  } else if (isNode()) {
     return new NodeWorker(workerURL);
   } else {
     throw new Error(

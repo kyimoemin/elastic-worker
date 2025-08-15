@@ -1,9 +1,20 @@
 import { describe, it, expect } from "vitest";
 import { getWorker } from "../../dist/worker/index.js";
+import { isNode } from "../../dist/constants.js";
 
 describe("dist/worker/index.js", () => {
   it("should be defined", () => {
     expect(getWorker).toBeDefined();
+  });
+
+  it("should run in node env", () => {
+    expect(isNode()).toBeTruthy();
+  });
+
+  it("getWorker should return NodeWorker", () => {
+    const workerURL = new URL("./dummy-worker.js", import.meta.url);
+    const worker = getWorker(workerURL);
+    expect(worker.constructor.name).toBe("NodeWorker");
   });
 
   it("getWorker should return a UniversalWorker instance for a valid worker URL", () => {
@@ -11,7 +22,6 @@ describe("dist/worker/index.js", () => {
     const workerURL = new URL("./dummy-worker.js", import.meta.url);
     // getWorker should not throw and should return an object with UniversalWorker methods
     const worker = getWorker(workerURL);
-    expect(worker.constructor.name).toBe("NodeWorker");
     expect(worker).toBeDefined();
     expect(typeof worker.postMessage).toBe("function");
     expect(typeof worker.terminate).toBe("function");

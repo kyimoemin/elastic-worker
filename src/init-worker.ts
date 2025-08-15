@@ -33,9 +33,9 @@ export const initWorker = <T extends FunctionsRecord>(obj: T) => {
 };
 
 function getHost() {
-  if (isBrowser) {
+  if (isBrowser()) {
     return new WebHost();
-  } else if (isNode) {
+  } else if (isNode()) {
     const { isMainThread } = require("worker_threads");
     if (isMainThread)
       throw new Error(

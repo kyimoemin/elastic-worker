@@ -4,12 +4,12 @@ import { UniversalWorker } from "../types";
 export class BrowserWorker implements UniversalWorker {
   private worker: Worker;
   constructor(workerURL: URL) {
-    if (!isBrowser) {
+    if (!isBrowser()) {
       throw new Error(
         "BrowserWorker can only be used in a browser environment."
       );
     }
-    this.worker = new Worker(workerURL, { type: "module" });
+    this.worker = new window.Worker(workerURL, { type: "module" });
   }
 
   postMessage(message: any): void {
