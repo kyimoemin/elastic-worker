@@ -1,3 +1,6 @@
+import { UniversalWorker } from "./types";
+import { getUniversalWorker } from "./worker/index";
+
 /**
  * Manages a pool of Web Workers, optimizing resource usage by limiting the number of non-busy workers.
  * Provides methods to spawn, reuse, terminate, and clean up workers.
@@ -30,7 +33,7 @@ export class WorkerManager {
    */
   public readonly MAX_NON_BUSY_WORKERS: number;
 
-  private workers: Map<Worker, WorkerInfo> = new Map();
+  private workers: Map<UniversalWorker, WorkerInfo> = new Map();
 
   private readonly workerURL: URL;
 
@@ -49,7 +52,7 @@ export class WorkerManager {
    * @returns The newly created WorkerInfo instance.
    */
   private spawnWorker = () => {
-    const worker = new Worker(this.workerURL, { type: "module" });
+    const worker = getUniversalWorker(this.workerURL);
     const workerInfo = new WorkerInfo(worker);
     this.workers.set(worker, workerInfo);
     return workerInfo;
@@ -88,7 +91,7 @@ export class WorkerManager {
    * Terminates a specific Worker and removes it from the pool.
    * @param worker The Worker instance to terminate.
    */
-  terminateWorker = (worker: Worker) => {
+  terminateWorker = (worker: UniversalWorker) => {
     const workerInfo = this.workers.get(worker);
     if (workerInfo) {
       workerInfo.worker.terminate();
@@ -111,11 +114,11 @@ export class WorkerManager {
 }
 
 export class WorkerInfo {
-  public readonly worker: Worker;
+  public readonly worker: UniversalWorker;
 
   busy: boolean;
 
-  constructor(worker: Worker) {
+  constructor(worker: UniversalWorker) {
     this.worker = worker;
     this.busy = false;
   }

@@ -8,7 +8,7 @@ import { NodeWorker } from "./node-worker";
  * @param workerURL The URL of the worker script.
  * @returns
  */
-export function getWorker(workerURL: URL): UniversalWorker {
+export function getUniversalWorker(workerURL: URL): UniversalWorker {
   if (isBrowser()) {
     return new BrowserWorker(workerURL);
   } else if (isNode()) {
