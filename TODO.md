@@ -5,7 +5,7 @@
 following places are needed to change
 
 - [x] worker
-- [ ] init-worker/init-node-worker
+- [x] init-worker
 - [ ] worker-manager
 - [ ] dedicated-worker
 - [ ] dynamic worker
