@@ -1,6 +1,12 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { ResponsePayload, FunctionsRecord, WorkerProxy } from "./types";
+import {
+  ResponsePayload,
+  FunctionsRecord,
+  WorkerProxy,
+  UniversalWorker,
+} from "./types";
+import { getUniversalWorker } from "./worker/index";
 
 type Calls = {
   resolve: (result?: any) => void;
@@ -22,7 +28,7 @@ export class DedicatedWorker<T extends FunctionsRecord>
   implements WorkerProxy<T>
 {
   private calls = new Map<string, Calls>();
-  private worker: Worker;
+  private worker: UniversalWorker;
 
   private readonly workerURL: URL;
 
@@ -47,7 +53,7 @@ export class DedicatedWorker<T extends FunctionsRecord>
   }
 
   private spawnWorker = () => {
-    return new Worker(this.workerURL, { type: "module" });
+    return getUniversalWorker(this.workerURL);
   };
 
   private cleanup = () => {

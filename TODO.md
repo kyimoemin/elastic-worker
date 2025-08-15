@@ -6,6 +6,7 @@ following places are needed to change
 
 - [x] worker
 - [x] init-worker
-- [ ] worker-manager
-- [ ] dedicated-worker
+- [x] worker-manager
+- [x] dedicated-worker
 - [ ] dynamic worker
+- [ ] add test script in github action
