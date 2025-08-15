@@ -8,5 +8,5 @@ following places are needed to change
 - [x] init-worker
 - [x] worker-manager
 - [x] dedicated-worker
-- [ ] dynamic worker
-- [ ] add test script in github action
+- [x] dynamic worker
+- [x] add test script in github action
