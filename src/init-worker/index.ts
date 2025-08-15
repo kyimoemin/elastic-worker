@@ -1,5 +1,9 @@
-import { isBrowser, isNode } from "./constants";
-import type { RequestPayload, ResponsePayload, FunctionsRecord } from "./types";
+import { isBrowser, isNode } from "../constants";
+import type {
+  RequestPayload,
+  ResponsePayload,
+  FunctionsRecord,
+} from "../types";
 
 /**
  *

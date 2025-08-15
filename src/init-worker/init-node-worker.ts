@@ -1,6 +1,10 @@
-import { isNode } from "./constants";
+import { isNode } from "../constants";
 import { parentPort, isMainThread } from "worker_threads";
-import type { RequestPayload, ResponsePayload, FunctionsRecord } from "./types";
+import type {
+  RequestPayload,
+  ResponsePayload,
+  FunctionsRecord,
+} from "../types";
 
 export const initNodeWorker = <T extends FunctionsRecord>(obj: T) => {
   if (isMainThread)
