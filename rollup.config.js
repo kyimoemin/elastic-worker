@@ -4,6 +4,7 @@ import commonjs from "@rollup/plugin-commonjs";
 import json from "@rollup/plugin-json";
 import typescript from "@rollup/plugin-typescript";
 import dts from "rollup-plugin-dts";
+import alias from "@rollup/plugin-alias";
 
 const input = "src/index.ts";
 
@@ -24,6 +25,17 @@ const mkJsBuild = ({ env }) => ({
     exports: "named",
   },
   plugins: [
+    alias({
+      entries: [
+        {
+          find: "#env-adapter",
+          replacement:
+            env === "browser"
+              ? path.resolve("src/browser/index.ts")
+              : path.resolve("src/node/index.ts"),
+        },
+      ],
+    }),
     resolve({
       browser: env === "browser", // tells Rollup to prefer browser field
       preferBuiltins: env === "node", // keep Node built-ins for node build
