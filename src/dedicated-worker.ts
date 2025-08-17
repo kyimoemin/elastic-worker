@@ -6,6 +6,7 @@ import {
   WorkerProxy,
   UniversalWorker,
 } from "./types";
+import { getUUID } from "./utils/index";
 import { getUniversalWorker } from "./worker/index";
 
 type Calls = {
@@ -80,7 +81,7 @@ export class DedicatedWorker<T extends FunctionsRecord>
   func = <K extends keyof T>(funcName: K) => {
     return (...args: Parameters<T[K]>) =>
       new Promise<ReturnType<T[K]>>((resolve, reject) => {
-        const id = crypto.randomUUID();
+        const id = getUUID();
         this.calls.set(id, { resolve, reject });
         this.worker.postMessage({ func: funcName, args, id });
       });
