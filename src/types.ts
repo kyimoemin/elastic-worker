@@ -24,3 +24,20 @@ export interface WorkerProxy<T extends FunctionsRecord> {
   ): (...args: Parameters<T[K]>) => Promise<ReturnType<T[K]>>;
   terminate(): void;
 }
+
+export interface UniversalWorker {
+  postMessage(message: any): void;
+
+  onmessage(message: any): void;
+
+  onerror(error: Error): void;
+
+  onexit(exitCode: number): void;
+
+  terminate(): void;
+}
+
+export interface Host {
+  postMessage: (message: any) => void;
+  onmessage: (event: { data: any }) => void;
+}
