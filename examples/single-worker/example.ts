@@ -8,8 +8,8 @@ const num2 = 5;
 
 const workerProxy = new DedicatedWorker<Calculator>(workerURL);
 
-const addition = await workerProxy.func("add")(num1, num2);
-console.log(`Addition of ${num1} and ${num2} is:`, addition);
+const addition = await workerProxy.func("add");
+console.log(`Addition of ${num1} and ${num2} is:`, addition(num1, num2));
 
-const subtraction = await workerProxy.func("subtract")(num1, num2);
-console.log(`Subtraction of ${num1} and ${num2} is:`, subtraction);
+const subtraction = await workerProxy.func("subtract");
+console.log(`Subtraction of ${num1} and ${num2} is:`, subtraction(num1, num2));

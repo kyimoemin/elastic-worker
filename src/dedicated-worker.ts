@@ -1,6 +1,13 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { ResponsePayload, FunctionsRecord, WorkerProxy } from "./types";
+import {
+  ResponsePayload,
+  FunctionsRecord,
+  WorkerProxy,
+  UniversalWorker,
+} from "./types";
+import { getUUID } from "./utils/index";
+import { getUniversalWorker } from "./worker/index";
 
 type Calls = {
   resolve: (result?: any) => void;
@@ -22,7 +29,7 @@ export class DedicatedWorker<T extends FunctionsRecord>
   implements WorkerProxy<T>
 {
   private calls = new Map<string, Calls>();
-  private worker: Worker;
+  private worker: UniversalWorker;
 
   private readonly workerURL: URL;
 
@@ -43,14 +50,11 @@ export class DedicatedWorker<T extends FunctionsRecord>
       }
       this.calls.delete(id);
     };
-
-    this.worker.addEventListener("error", this.cleanup);
-    this.worker.addEventListener("exit", this.cleanup);
-    this.worker.addEventListener("close", this.cleanup);
+    this.worker.onerror = this.cleanup;
   }
 
   private spawnWorker = () => {
-    return new Worker(this.workerURL, { type: "module" });
+    return getUniversalWorker(this.workerURL);
   };
 
   private cleanup = () => {
@@ -77,7 +81,7 @@ export class DedicatedWorker<T extends FunctionsRecord>
   func = <K extends keyof T>(funcName: K) => {
     return (...args: Parameters<T[K]>) =>
       new Promise<ReturnType<T[K]>>((resolve, reject) => {
-        const id = crypto.randomUUID();
+        const id = getUUID();
         this.calls.set(id, { resolve, reject });
         this.worker.postMessage({ func: funcName, args, id });
       });
@@ -93,9 +97,6 @@ export class DedicatedWorker<T extends FunctionsRecord>
    * It should be called when the worker is no longer needed to prevent memory leaks.
    */
   terminate = () => {
-    this.worker.removeEventListener("error", this.cleanup);
-    this.worker.removeEventListener("exit", this.cleanup);
-    this.worker.removeEventListener("close", this.cleanup);
     this.cleanup();
     this.worker.terminate();
   };
