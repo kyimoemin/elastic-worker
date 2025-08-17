@@ -3,10 +3,10 @@
   "version": "1.1.0",
   "description": "Use worker as simple asynchronous function",
   "type": "module",
-  "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "main": "./dist/node/index.js",
+  "module": "./dist/browser/index.js",
   "scripts": {
-    "build": "tsc",
+    "build": "rollup -c",
     "test-node": "vitest  --environment=node tests/node",
     "test-web": "vitest --environment=jsdom tests/browser"
   },
@@ -42,9 +42,16 @@
     }
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.6",
+    "@rollup/plugin-json": "^6.1.0",
+    "@rollup/plugin-node-resolve": "^16.0.1",
+    "@rollup/plugin-typescript": "^12.1.4",
     "@vitest/browser": "^3.2.4",
     "jsdom": "^26.1.0",
-    "typescript": "^5.8.3",
+    "rollup": "^4.46.2",
+    "rollup-plugin-dts": "^6.2.3",
+    "tslib": "^2.8.1",
+    "typescript": "^5.9.2",
     "vitest": "^3.2.4"
   }
 }
