@@ -2,7 +2,7 @@ import { UniversalWorker } from "./types";
 import { getUniversalWorker } from "./worker/index";
 
 /**
- * Manages a pool of Web Workers, optimizing resource usage by limiting the number of non-busy workers.
+ * Manages a pool of Workers, optimizing resource usage by limiting the number of non-busy workers.
  * Provides methods to spawn, reuse, terminate, and clean up workers.
  *
  * ## Usage Example
@@ -22,7 +22,7 @@ import { getUniversalWorker } from "./worker/index";
  * manager.terminateWorker(worker);
  *
  * // 5. Cleanup all workers when done
- * manager.cleanup();
+ * manager.terminateAllWorkers();
  * ```
  *
  */
