@@ -1,4 +1,4 @@
-import { UniversalWorker } from "#env-adapter";
+import { UniversalWorker } from "../../dist/browser/browser/universal-worker.js";
 import { beforeAll, describe, expect, it } from "vitest";
 import { mockBrowserWorker } from "./browser-worker-mock.js";
 

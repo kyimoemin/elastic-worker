@@ -1,5 +1,5 @@
 import { describe, it, expect } from "vitest";
-import { UniversalWorker } from "#env-adapter";
+import { UniversalWorker } from "../../dist/node/node/universal-worker";
 
 describe("dist/worker/index.js", () => {
   it("should be defined", () => {

@@ -1,4 +1,4 @@
-import { initWorker } from "../../dist/init-worker";
+import { initWorker } from "../../dist/node/init-worker";
 
 const add = (a, b) => a + b;
 

@@ -1,4 +1,4 @@
 export * from "./host";
-export * from "./worker";
+export * from "./universal-worker";
 
 export const getUUID = () => crypto.randomUUID();

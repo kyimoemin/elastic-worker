@@ -1,4 +1,4 @@
-import { initWorker } from "../../dist/init-worker";
+import { initWorker } from "../../dist/browser/init-worker.js";
 
 const add = (a, b) => a + b;
 

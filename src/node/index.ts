@@ -1,5 +1,5 @@
 export * from "./host";
-export * from "./worker";
+export * from "./universal-worker";
 import { randomUUID } from "crypto";
 
 export const getUUID = () => randomUUID();
