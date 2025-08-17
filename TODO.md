@@ -1,5 +1,9 @@
 # async-multi-worker
 
+## fix
+
+- [ ] worker terminated error
+
 ## Nodejs support
 
 following places are needed to change
@@ -13,4 +17,4 @@ following places are needed to change
 
 ## use Rollup
 
-- [ ] build is still importing browser env in dist
+- [x] build is still importing browser env in dist
