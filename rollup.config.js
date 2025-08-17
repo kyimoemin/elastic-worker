@@ -17,7 +17,7 @@ const mkJsBuild = ({ env }) => ({
   output: {
     dir: `dist/${env}`,
     format: "esm",
-    sourcemap: true,
+    sourcemap: false,
     preserveModules: true,
     entryFileNames: "[name].js", // ensures .js extension
     chunkFileNames: "[name]-[hash].js",
@@ -33,7 +33,7 @@ const mkJsBuild = ({ env }) => ({
     typescript({
       tsconfig: "./tsconfig.json",
       declaration: true,
-      declarationMap: true,
+      declarationMap: false,
       outDir: `dist/${env}/types`, // temp; we’ll merge types below
       rootDir: "src",
     }),
