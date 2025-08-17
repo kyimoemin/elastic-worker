@@ -1,15 +1,10 @@
-import type { Worker } from "worker_threads";
-import { isNode } from "../constants";
-import { UniversalWorker } from "../types";
+import { Worker } from "worker_threads";
+import { UniversalWorkerInterface } from "../types";
 
-export class NodeWorker implements UniversalWorker {
+export class UniversalWorker implements UniversalWorkerInterface {
   private worker: Worker;
 
   constructor(workerURL: URL) {
-    if (!isNode()) {
-      throw new Error("NodeWorker can only be used in a Node.js environment.");
-    }
-    const { Worker } = require("worker_threads");
     this.worker = new Worker(workerURL);
   }
 

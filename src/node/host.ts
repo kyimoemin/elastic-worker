@@ -1,5 +1,5 @@
-import { Host } from "../types";
-export class NodeHost implements Host {
+import { HostInterface } from "../types";
+export class Host implements HostInterface {
   readonly postMessage: (message: any) => void;
   private readonly parentPort;
   constructor() {

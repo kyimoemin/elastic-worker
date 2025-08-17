@@ -1,6 +1,6 @@
-import { Host } from "../types";
+import { HostInterface } from "../types";
 
-export class BrowserHost implements Host {
+export class Host implements HostInterface {
   readonly postMessage: (message: any) => void;
   constructor() {
     if (!self) {

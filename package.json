@@ -26,6 +26,21 @@
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"
   },
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "node": "./dist/node/index.mjs",
+      "browser": "./dist/browser/index.mjs",
+      "default": "./dist/browser/index.mjs"
+    }
+  },
+  "imports": {
+    "#env-adapter": {
+      "browser": "./src/browser/index.ts",
+      "node": "./src/node/index.ts",
+      "default": "./src/browser/index.ts"
+    }
+  },
   "devDependencies": {
     "@vitest/browser": "^3.2.4",
     "jsdom": "^26.1.0",
