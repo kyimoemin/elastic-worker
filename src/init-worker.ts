@@ -1,18 +1,12 @@
-import { isBrowser, isNode } from "../constants";
-import type {
-  RequestPayload,
-  ResponsePayload,
-  FunctionsRecord,
-} from "../types";
-import { BrowserHost } from "./browser-host";
-import { NodeHost } from "./node-host";
+import { Host } from "#env-adapter";
+import type { FunctionsRecord, RequestPayload, ResponsePayload } from "./types";
 
 /**
  *
  * @param obj Object containing functions to be called in the worker.
  */
 export const initWorker = <T extends FunctionsRecord>(obj: T) => {
-  const host = getHost();
+  const host = new Host();
   host.onmessage = async (event) => {
     const { func, args, id } = event.data as RequestPayload<
       Parameters<T[keyof T]>
@@ -37,19 +31,3 @@ export const initWorker = <T extends FunctionsRecord>(obj: T) => {
     }
   };
 };
-
-function getHost() {
-  if (isBrowser()) {
-    return new BrowserHost();
-  } else if (isNode()) {
-    const { isMainThread } = require("worker_threads");
-    if (isMainThread)
-      throw new Error(
-        "`initNodeWorker` should be called in a worker thread context not in the main thread."
-      );
-    return new NodeHost();
-  }
-  throw new Error(
-    "Unsupported environment: `initWorker` can only be used in Node.js or browser environments."
-  );
-}

@@ -1,5 +1,4 @@
-import { UniversalWorker } from "./types";
-import { getUniversalWorker } from "./worker/index";
+import { UniversalWorker } from "#env-adapter";
 
 /**
  * Manages a pool of Workers, optimizing resource usage by limiting the number of non-busy workers.
@@ -52,7 +51,7 @@ export class WorkerManager {
    * @returns The newly created WorkerInfo instance.
    */
   private spawnWorker = () => {
-    const worker = getUniversalWorker(this.workerURL);
+    const worker = new UniversalWorker(this.workerURL);
     const workerInfo = new WorkerInfo(worker);
     this.workers.set(worker, workerInfo);
     return workerInfo;

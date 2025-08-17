@@ -10,3 +10,7 @@ following places are needed to change
 - [x] dedicated-worker
 - [x] dynamic worker
 - [x] add test script in github action
+
+## use Rollup
+
+- [ ] build is still importing browser env in dist

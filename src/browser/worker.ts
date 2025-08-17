@@ -1,14 +1,8 @@
-import { isBrowser } from "../constants";
-import { UniversalWorker } from "../types";
+import { UniversalWorkerInterface } from "../types";
 
-export class BrowserWorker implements UniversalWorker {
+export class UniversalWorker implements UniversalWorkerInterface {
   private worker: Worker;
   constructor(workerURL: URL) {
-    if (!isBrowser()) {
-      throw new Error(
-        "BrowserWorker can only be used in a browser environment."
-      );
-    }
     this.worker = new window.Worker(workerURL, { type: "module" });
   }
 

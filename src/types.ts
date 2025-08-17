@@ -25,7 +25,7 @@ export interface WorkerProxy<T extends FunctionsRecord> {
   terminate(): void;
 }
 
-export interface UniversalWorker {
+export interface UniversalWorkerInterface {
   postMessage(message: any): void;
 
   onmessage(message: any): void;
@@ -37,7 +37,7 @@ export interface UniversalWorker {
   terminate(): void;
 }
 
-export interface Host {
+export interface HostInterface {
   postMessage: (message: any) => void;
   onmessage: (event: { data: any }) => void;
 }

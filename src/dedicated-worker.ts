@@ -1,13 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import {
-  ResponsePayload,
-  FunctionsRecord,
-  WorkerProxy,
-  UniversalWorker,
-} from "./types";
-import { getUUID } from "./utils/index";
-import { getUniversalWorker } from "./worker/index";
+import { ResponsePayload, FunctionsRecord, WorkerProxy } from "./types";
+import { getUUID, UniversalWorker } from "#env-adapter";
 
 type Calls = {
   resolve: (result?: any) => void;
@@ -54,7 +48,7 @@ export class DedicatedWorker<T extends FunctionsRecord>
   }
 
   private spawnWorker = () => {
-    return getUniversalWorker(this.workerURL);
+    return new UniversalWorker(this.workerURL);
   };
 
   private cleanup = () => {
