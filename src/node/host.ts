@@ -1,9 +1,9 @@
 import { HostInterface } from "../types";
+import { parentPort, isMainThread } from "worker_threads";
 export class Host implements HostInterface {
   readonly postMessage: (message: any) => void;
   private readonly parentPort;
   constructor() {
-    const { parentPort, isMainThread } = require("worker_threads");
     if (isMainThread)
       throw new Error(
         "You are trying to run the code in the main thread. This code must be run in a worker thread context."
