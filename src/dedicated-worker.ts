@@ -51,11 +51,10 @@ export class DedicatedWorker<T extends FunctionsRecord>
     return new UniversalWorker(this.workerURL);
   };
 
-  private cleanup = () => {
-    console.log("Cleaning up worker calls");
-    const error = new Error("Worker was terminated or encountered an error.");
+  private cleanup = (error?: Error) => {
+    console.log("Cleaning up worker calls", error);
     for (const { reject } of this.calls.values()) {
-      reject(error);
+      reject(error ?? new Error("Worker was terminated"));
     }
     this.calls.clear();
   };
