@@ -1,4 +1,4 @@
-import { initWorker } from "../../src/init-worker";
+import { initWorker } from "async-multi-worker";
 
 export class Calculator {
   add(a: number, b: number) {

@@ -1,4 +1,4 @@
-import { initWorker } from "../../src/init-worker";
+import { initWorker } from "async-multi-worker";
 
 const add = (a: number, b: number) => a + b;
 
