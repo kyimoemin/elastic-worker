@@ -11,7 +11,7 @@ export class Host implements HostInterface {
     this.postMessage = self.postMessage;
   }
 
-  set onmessage(callback: (event: { data: any }) => void) {
-    self.onmessage = callback;
+  set onmessage(callback: (data: any) => void) {
+    self.onmessage = (event) => callback(event.data);
   }
 }

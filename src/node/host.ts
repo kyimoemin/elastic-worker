@@ -17,7 +17,7 @@ export class Host implements HostInterface {
     this.postMessage = parentPort.postMessage;
   }
 
-  set onmessage(callback: (event: { data: any }) => void) {
+  set onmessage(callback: (data: any) => void) {
     this.parentPort.on("message", callback);
   }
 }

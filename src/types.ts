@@ -39,5 +39,5 @@ export interface UniversalWorkerInterface {
 
 export interface HostInterface {
   postMessage: (message: any) => void;
-  onmessage: (event: { data: any }) => void;
+  onmessage: (data: any) => void;
 }

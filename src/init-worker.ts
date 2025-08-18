@@ -7,10 +7,8 @@ import type { FunctionsRecord, RequestPayload, ResponsePayload } from "./types";
  */
 export const initWorker = <T extends FunctionsRecord>(obj: T) => {
   const host = new Host();
-  host.onmessage = async (event) => {
-    const { func, args, id } = event.data as RequestPayload<
-      Parameters<T[keyof T]>
-    >;
+  host.onmessage = async (data) => {
+    const { func, args, id } = data as RequestPayload<Parameters<T[keyof T]>>;
     try {
       if (typeof obj[func] !== "function") {
         throw new Error(`Function '${String(func)}' not found in worker.`);

@@ -35,8 +35,8 @@ export class DynamicWorker<T extends FunctionsRecord>
       reject: (error: Error) => any;
       timeoutId?: ReturnType<typeof setTimeout>;
     }) =>
-    (event: MessageEvent<ResponsePayload<any>>) => {
-      const { result, error } = event.data as ResponsePayload<any>;
+    (data: ResponsePayload<any>) => {
+      const { result, error } = data;
       if (error) {
         const e = new Error(error.message);
         if (error.name) e.name = error.name;

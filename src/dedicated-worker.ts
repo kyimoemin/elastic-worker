@@ -30,8 +30,8 @@ export class DedicatedWorker<T extends FunctionsRecord>
   constructor(workerURL: URL) {
     this.workerURL = workerURL;
     this.worker = this.spawnWorker();
-    this.worker.onmessage = (event) => {
-      const { id, result, error } = event.data as ResponsePayload<any>;
+    this.worker.onmessage = (data) => {
+      const { id, result, error } = data as ResponsePayload<any>;
       const call = this.calls.get(id);
       if (!call) return;
       if (error) {
