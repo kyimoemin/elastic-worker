@@ -8,7 +8,7 @@ export class Host implements HostInterface {
         "self is not available. This code must be run in a worker thread context."
       );
     }
-    this.postMessage = self.postMessage;
+    this.postMessage = (data) => self.postMessage(data);
   }
 
   set onmessage(callback: (data: any) => void) {
