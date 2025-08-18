@@ -1,11 +1,8 @@
 import { describe, it, expect } from "vitest";
 import { UniversalWorker } from "../../dist/node/node/universal-worker";
-import { DedicatedWorker } from "../../dist/node/index";
+import { DedicatedWorker, DynamicWorker } from "../../dist/node/index";
 
 describe("dist/worker/index.js", () => {
-  const workerURL = new URL("./dummy-worker.js", import.meta.url);
-  const worker = new DedicatedWorker(workerURL);
-
   it("should be defined", () => {
     expect(UniversalWorker).toBeDefined();
   });
@@ -13,13 +10,34 @@ describe("dist/worker/index.js", () => {
   it("should return a UniversalWorker instance for a valid worker URL", () => {
     // Use a dummy worker script path (must exist in dist for Node.js)
     // getWorker should not throw and should return an object with UniversalWorker methods
-    const worker = new UniversalWorker(workerURL);
+    const worker = new UniversalWorker("./dummy-worker.js");
     expect(worker).toBeDefined();
     expect(typeof worker.postMessage).toBe("function");
     expect(typeof worker.terminate).toBe("function");
   });
+});
+
+describe("DedicatedWorker", () => {
+  const workerURL = new URL("./dummy-worker.js", import.meta.url);
+  const dedicatedWorker = new DedicatedWorker(workerURL);
+  it("should be defined", () => {
+    expect(DedicatedWorker).toBeDefined();
+  });
   it("should execute function correctly", async () => {
-    const add = worker.func("add");
+    const add = dedicatedWorker.func("add");
+    const result = await add(1, 2);
+    expect(result).toBe(3);
+  });
+});
+
+describe("DynamicWorker", () => {
+  const workerURL = new URL("./dummy-worker.js", import.meta.url);
+  const dynamicWorker = new DynamicWorker(workerURL);
+  it("should be defined", () => {
+    expect(DynamicWorker).toBeDefined();
+  });
+  it("should execute function correctly", async () => {
+    const add = dynamicWorker.func("add");
     const result = await add(1, 2);
     expect(result).toBe(3);
   });
