@@ -3,8 +3,15 @@ import type { ResponsePayload, FunctionsRecord, WorkerProxy } from "./types";
 import { WorkerInfo, WorkerManager } from "./worker-manager";
 import { getUUID } from "#env-adapter";
 
+type MessageListenerParam = {
+  workerInfo: WorkerInfo;
+  resolve: (result: any) => any;
+  reject: (error: Error) => any;
+  timeoutId?: ReturnType<typeof setTimeout>;
+};
+
 /**
- * A generic handler for making asynchronous function calls to a Web Worker.
+ * A generic handler for making asynchronous function calls to a Worker.
  *
  * This class manages communication between the main thread and a worker, allowing you to call worker-exposed functions as Promises.
  * It handles message passing, result/error propagation, timeouts, and worker cleanup.
@@ -17,25 +24,19 @@ import { getUUID } from "#env-adapter";
 export class DynamicWorker<T extends FunctionsRecord>
   implements WorkerProxy<T>
 {
-  private workerManager: WorkerManager;
+  private readonly workerManager: WorkerManager;
 
   constructor(workerURL: URL) {
     this.workerManager = new WorkerManager(workerURL);
   }
 
-  private messageListener =
-    ({
-      workerInfo,
-      resolve,
-      reject,
-      timeoutId,
-    }: {
-      workerInfo: WorkerInfo;
-      resolve: (result: any) => any;
-      reject: (error: Error) => any;
-      timeoutId?: ReturnType<typeof setTimeout>;
-    }) =>
-    (data: ResponsePayload<any>) => {
+  private messageListener({
+    workerInfo,
+    resolve,
+    reject,
+    timeoutId,
+  }: MessageListenerParam) {
+    return (data: ResponsePayload<any>) => {
       const { result, error } = data;
       if (error) {
         const e = new Error(error.message);
@@ -48,6 +49,7 @@ export class DynamicWorker<T extends FunctionsRecord>
       workerInfo.busy = false;
       clearTimeout(timeoutId);
     };
+  }
 
   /**
    * Returns a function that calls a method in the worker asynchronously with optional timeout.

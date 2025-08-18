@@ -9,12 +9,12 @@ type Calls = {
 };
 
 /**
- * A generic handler for making asynchronous function calls to a Web Worker.
+ * A generic handler for making asynchronous function calls to a Worker.
  *
  * This class manages communication between the main thread and a worker, allowing you to call worker-exposed functions as Promises.
  * It handles message passing, result/error propagation, timeouts, and worker cleanup.
  *
- * @template T - The type describing the functions exposed by the worker (should extend FunctionsRecord).
+ * @template T - The type describing the functions exposed by the worker .
  *
  * @see func for calling worker functions
  * @see terminate for cleanup
@@ -22,8 +22,8 @@ type Calls = {
 export class DedicatedWorker<T extends FunctionsRecord>
   implements WorkerProxy<T>
 {
-  private calls = new Map<string, Calls>();
-  private worker: UniversalWorker;
+  private readonly calls = new Map<string, Calls>();
+  private readonly worker: UniversalWorker;
 
   private readonly workerURL: URL;
 
@@ -47,17 +47,16 @@ export class DedicatedWorker<T extends FunctionsRecord>
     this.worker.onerror = this.cleanup;
   }
 
-  private spawnWorker = () => {
+  private spawnWorker() {
     return new UniversalWorker(this.workerURL);
-  };
+  }
 
-  private cleanup = (error?: Error) => {
-    console.log("Cleaning up worker calls", error);
+  private cleanup(error?: Error) {
     for (const { reject } of this.calls.values()) {
       reject(error ?? new Error("Worker was terminated"));
     }
     this.calls.clear();
-  };
+  }
 
   /**
    * Returns a function that calls a method in the worker asynchronously with optional timeout.
