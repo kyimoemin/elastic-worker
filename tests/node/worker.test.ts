@@ -2,7 +2,7 @@ import { describe, it, expect } from "vitest";
 import { UniversalWorker } from "../../dist/node/node/universal-worker";
 import { DedicatedWorker, DynamicWorker } from "../../dist/node/index";
 
-describe("dist/worker/index.js", () => {
+describe("UniversalWorker", () => {
   it("should be defined", () => {
     expect(UniversalWorker).toBeDefined();
   });
@@ -14,6 +14,7 @@ describe("dist/worker/index.js", () => {
     expect(worker).toBeDefined();
     expect(typeof worker.postMessage).toBe("function");
     expect(typeof worker.terminate).toBe("function");
+    worker.terminate();
   });
 });
 
@@ -27,10 +28,12 @@ describe("DedicatedWorker", () => {
     const add = dedicatedWorker.func("add");
     const result = await add(1, 2);
     expect(result).toBe(3);
+    dedicatedWorker.terminate();
   });
 });
 
 describe("DynamicWorker", () => {
+  console.log("meta url", import.meta.url);
   const workerURL = new URL("./dummy-worker.js", import.meta.url);
   const dynamicWorker = new DynamicWorker(workerURL);
   it("should be defined", () => {
@@ -40,5 +43,6 @@ describe("DynamicWorker", () => {
     const add = dynamicWorker.func("add");
     const result = await add(1, 2);
     expect(result).toBe(3);
+    dynamicWorker.terminate();
   });
 });
