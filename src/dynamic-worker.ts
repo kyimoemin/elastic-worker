@@ -2,6 +2,7 @@
 import type { ResponsePayload, FunctionsRecord, WorkerProxy } from "./types";
 import { WorkerInfo, WorkerManager } from "./worker-manager";
 import { getUUID } from "#env-adapter";
+import { TimeoutError } from "./errors";
 
 type MessageListenerParam = {
   workerInfo: WorkerInfo;
@@ -26,8 +27,8 @@ export class DynamicWorker<T extends FunctionsRecord>
 {
   private readonly workerManager: WorkerManager;
 
-  constructor(workerURL: URL) {
-    this.workerManager = new WorkerManager(workerURL);
+  constructor(workerURL: URL, maxNonBusyWorker?: number) {
+    this.workerManager = new WorkerManager(workerURL, maxNonBusyWorker);
   }
 
   private messageListener({
@@ -73,7 +74,7 @@ export class DynamicWorker<T extends FunctionsRecord>
         let timeoutId: ReturnType<typeof setTimeout> | undefined;
         if (timeoutMs && timeoutMs !== Infinity && timeoutMs > 0) {
           timeoutId = setTimeout(() => {
-            reject(new Error(`Worker call timed out after ${timeoutMs}ms`));
+            reject(new TimeoutError(timeoutMs));
             this.workerManager.terminateWorker(workerInfo.worker);
           }, timeoutMs);
         }
