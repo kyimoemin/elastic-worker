@@ -3,6 +3,7 @@
 ## Table of Content
 
 - [Overview](#overview)
+- [Installation](#installation)
 - [Usage](#usage)
 - [DedicatedWorker](#dedicatedworker)
 - [DynamicWorker](#dynamicworker)
@@ -16,6 +17,12 @@
 | DedicatedWorker | persistent state | blocking             |
 | DynamicWorker   | non-blocking     | non-persistent state |
 
+## Installation
+
+```bash
+ npm i async-multi-worker
+```
+
 ## Usage
 
 You have to create separate file for worker context to be able to use it. e.g., let assume we have this folder structure.
@@ -23,7 +30,7 @@ You have to create separate file for worker context to be able to use it. e.g., 
 ```tree
 src /
 	├─ worker.ts
-	└─  index.ts
+	└─  main.ts
 ```
 
 In `worker.ts` file you write functions and combine them in an object and pass that object to `initWorker` function.
@@ -47,7 +54,7 @@ and that's it you created a worker file that will be run in worker thread.
 
 and now we will use it in our code, the package provided two type of worker that we can use. [DedicatedWorker](#dedicatedworker) or [DynamicWorker](#dynamicworker) depending on your need. e.g.,
 
-index.ts
+main.ts
 
 ```ts
 import { DynamicWorker } from "async-multi-worker";
