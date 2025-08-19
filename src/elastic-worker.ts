@@ -27,8 +27,8 @@ export class ElasticWorker<T extends FunctionsRecord>
 {
   private readonly workerManager: WorkerManager;
 
-  constructor(workerURL: URL, maxNonBusyWorker?: number) {
-    this.workerManager = new WorkerManager(workerURL, maxNonBusyWorker);
+  constructor(workerURL: URL, maxIdleWorkers?: number) {
+    this.workerManager = new WorkerManager(workerURL, maxIdleWorkers);
   }
 
   private messageListener({

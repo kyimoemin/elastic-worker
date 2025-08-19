@@ -30,7 +30,7 @@ export class WorkerManager {
    * Maximum number of non-busy workers to keep alive. default is 5.
    * This helps manage resource usage by limiting the number of idle workers.
    */
-  public readonly MAX_NON_BUSY_WORKERS: number;
+  public readonly MAX_IDLE_WORKERS: number;
 
   private workers: Map<UniversalWorker, WorkerInfo> = new Map();
 
@@ -39,11 +39,11 @@ export class WorkerManager {
   /**
    * Creates a WorkerManager instance.
    * @param workerURL URL of the worker script.
-   * @param maxNonBusyWorkers Maximum number of non-busy workers to keep alive (default: 5).
+   * @param maxIdleWorkers Maximum number of non-busy workers to keep alive (default: 5).
    */
-  constructor(workerURL: URL, maxNonBusyWorkers: number = 5) {
+  constructor(workerURL: URL, maxIdleWorkers: number = 5) {
     this.workerURL = workerURL;
-    this.MAX_NON_BUSY_WORKERS = maxNonBusyWorkers;
+    this.MAX_IDLE_WORKERS = maxIdleWorkers;
   }
 
   /**
@@ -78,8 +78,8 @@ export class WorkerManager {
     for (const workerInfo of this.workers.values()) {
       if (!workerInfo.busy) nonBusyWorkers.push(workerInfo);
     }
-    if (nonBusyWorkers.length <= this.MAX_NON_BUSY_WORKERS) return;
-    const excessWorkers = nonBusyWorkers.slice(this.MAX_NON_BUSY_WORKERS);
+    if (nonBusyWorkers.length <= this.MAX_IDLE_WORKERS) return;
+    const excessWorkers = nonBusyWorkers.slice(this.MAX_IDLE_WORKERS);
     for (const workerInfo of excessWorkers) {
       workerInfo.worker.terminate();
       this.workers.delete(workerInfo.worker);
