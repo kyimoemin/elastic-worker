@@ -1,5 +1,9 @@
 # async-multi-worker
 
+![npm version](https://img.shields.io/npm/v/async-multi-worker)
+![npm downloads](https://img.shields.io/npm/dm/async-multi-worker)
+![license](https://img.shields.io/npm/l/async-multi-worker)
+
 ## Table of Content
 
 - [Overview](#overview)
@@ -7,16 +11,24 @@
 - [Usage](#usage)
 - [DedicatedWorker](#dedicatedworker)
 - [DynamicWorker](#dynamicworker)
+- [Configuration](#configuration)
+- [Contributing](#contributing)
 - [License](#license)
 
 ## Overview
 
-`async-multi-worker` enables simple, async multithreading using workers, without needing to deal with worker code directly. This package exports two worker classes: [DedicatedWorker](#dedicatedworker) and [DynamicWorker](#dynamicworker). Each has its own pros and cons—choose the one that best fits your needs.
+`async-multi-worker` provides a simple abstraction over **Web Workers** (browser) and **Worker Threads** (Node.js).
+It lets you offload CPU‑intensive or blocking tasks to workers **without manually handling worker setup or lifecycle**.
 
-| Worker          | Pros                                                | Cons                                                          |
-| --------------- | --------------------------------------------------- | ------------------------------------------------------------- |
-| DedicatedWorker | Can maintain persistent state across calls          | Function calls are queued; only one runs at a time (blocking) |
-| DynamicWorker   | Non-blocking; can handle multiple tasks in parallel | Cannot maintain state between calls (stateless)               |
+This package exports two worker classes: [DedicatedWorker](#dedicatedworker) and [DynamicWorker](#dynamicworker).
+Each has its pros and cons:
+
+| Worker          | Pros                                                | Cons                                                         |
+| --------------- | --------------------------------------------------- | ------------------------------------------------------------ |
+| DedicatedWorker | Can maintain persistent state across calls          | Queues calls; only one runs at a time (sequential execution) |
+| DynamicWorker   | Non-blocking; can handle multiple tasks in parallel | Cannot maintain state between calls (stateless)              |
+
+> **Compatibility:** Works in modern browsers (Web Worker) and Node.js (worker_threads). ESM import is recommended.
 
 ## Installation
 
@@ -26,7 +38,7 @@ npm i async-multi-worker
 
 ## Usage
 
-You need to create a separate file for the worker context. For example, let's assume you have the following folder structure:
+Create a separate file for the worker context.
 
 ```
 src/
@@ -34,15 +46,15 @@ src/
   main.ts
 ```
 
-In `worker.ts`, write your functions, combine them in an object, and pass that object to the `initWorker` function.
+### worker.ts
 
-worker.ts
+Define your functions and pass them to `initWorker`.
 
 ```ts
 import { initWorker } from "async-multi-worker";
 
-const add = (a, b) => a + b;
-const sub = (a, b) => a - b;
+const add = (a: number, b: number) => a + b;
+const sub = (a: number, b: number) => a - b;
 
 const calc = { add, sub };
 
@@ -51,44 +63,50 @@ export type Calculator = typeof calc;
 initWorker(calc);
 ```
 
-That's it—you've created a worker file that will run in a worker thread.
+### main.ts
 
-Now you can use it in your code. The package provides two types of workers: [DedicatedWorker](#dedicatedworker) and [DynamicWorker](#dynamicworker), depending on your needs. For example:
-
-main.ts
+Use `DedicatedWorker` or `DynamicWorker` depending on your needs.
 
 ```ts
 import { DynamicWorker } from "async-multi-worker";
 import type { Calculator } from "./worker.ts";
 
 const workerUrl = new URL("./worker.ts", import.meta.url);
+const dynamicWorker = new DynamicWorker(workerUrl);
 
-const dedicatedWorker = new DynamicWorker(workerUrl);
+const addition = dynamicWorker.func("add");
+const subtract = dynamicWorker.func("sub");
 
-const addition = dedicatedWorker.func("add");
-const subtract = dedicatedWorker.func("sub");
-
-const addResult = await addition(1, 2); // runs `add` function of `worker.ts` in worker thread
-const subResult = await subtract(1, 2); // runs `sub` function of `worker.ts` in worker thread
+const addResult = await addition(1, 2); // runs `add` in a worker thread
+const subResult = await subtract(5, 3); // runs `sub` in a worker thread
 ```
+
+**Flow (at a glance):**
+
+```
+main.ts → DedicatedWorker/DynamicWorker → worker.ts (your functions)
+```
+
+> **Bundler notes:** The `new URL("./worker.ts", import.meta.url)` pattern works in ESM-aware bundlers (Vite/Rollup) and Node ESM. For other setups, ensure your bundler handles worker assets accordingly.
 
 ---
 
 ## DedicatedWorker
 
-Runs in a single worker thread. Since it always uses the same worker, you can store state in this worker. However, it does not spawn new worker threads on demand—new function calls must wait until the previous execution is finished.
+A `DedicatedWorker` runs in a **single worker thread**.
+It can maintain **persistent state**, but tasks are executed sequentially (queued).
 
-### Properties
+### API
 
-| Property    | Type     | Params     | Return   | Description                                                  |
-| ----------- | -------- | ---------- | -------- | ------------------------------------------------------------ |
-| `busy`      | boolean  | -          | -        | Indicates if the worker thread is currently busy             |
-| `func`      | function | `funcName` | function | Returns a callable function from the worker by name          |
-| `terminate` | function | -          | -        | Terminates the worker thread and stops any ongoing execution |
+| Property    | Type     | Params     | Return   | Description                                   |
+| ----------- | -------- | ---------- | -------- | --------------------------------------------- |
+| `busy`      | boolean  | –          | –        | Indicates if the worker is currently busy     |
+| `func`      | function | `funcName` | function | Returns a callable function by name           |
+| `terminate` | function | –          | –        | Terminates the worker and stops any execution |
 
 ### Example
 
-worker.ts
+**worker.ts**
 
 ```ts
 import { initWorker } from "async-multi-worker";
@@ -112,9 +130,7 @@ const calculator = new Calculator();
 initWorker(calculator);
 ```
 
-Alternatively, you can implement it like this, depending on your preference:
-
-worker.ts
+Alternatively, you can implement it like below, depending on your preference:
 
 ```ts
 let result;
@@ -136,60 +152,102 @@ export type Calculator = typeof calculator;
 
 In this example, we store the last calculation result in the `result` variable. You can retrieve this in the main thread using the `lastResult` function.
 
-main.ts
+**main.ts**
 
 ```ts
 import { DedicatedWorker } from "async-multi-worker";
 import type { Calculator } from "./worker.ts";
 
 const workerUrl = new URL("./worker.ts", import.meta.url);
-
 const dedicatedWorker = new DedicatedWorker(workerUrl);
 
-const addition = dedicatedWorker.func("add");
-const subtract = dedicatedWorker.func("sub");
+const add = dedicatedWorker.func("add");
+const lastResult = dedicatedWorker.func("lastResult");
 
-const addResult = await addition(1, 2); // runs `add` function of `worker.ts` in worker thread
-const subResult = await subtract(1, 2); // runs `sub` function of `worker.ts` in worker thread
+await add(10, 20);
+console.log(await lastResult()); // 30
 ```
 
 ---
 
 ## DynamicWorker
 
-[DynamicWorker](#dynamicworker) can spawn multiple workers on demand, making it suitable for non-blocking tasks. Since it spawns and terminates workers as needed, it cannot store state in the worker. There is no upper bound for spawning new workers—a new worker thread will spawn if all existing workers are busy. However, there is a maximum limit for non-busy workers: if a worker is not busy anymore and there are more worker threads than the maximum limit, it will self-terminate. You can set the maximum non-busy worker limit when creating a new DynamicWorker (default is 5). Another advantage is that you can set a timeout on a function call; if the execution exceeds the timeout, it will terminate and return a timeout error .
+A `DynamicWorker` can **spawn multiple workers on demand**, making it ideal for parallel tasks.
+Workers are terminated automatically when idle (beyond your configured idle limit).
 
-### Properties
+### Features
 
-| Property    | Type     | Params                  | Return   | Description                                                                                                       |
-| ----------- | -------- | ----------------------- | -------- | ----------------------------------------------------------------------------------------------------------------- |
-| `func`      | function | `funcName`, `timeoutMs` | function | Returns a callable function from the worker by name, with optional timeout (default: 5000ms, `Infinity` disables) |
-| `terminate` | function | -                       | -        | Terminates all active worker threads                                                                              |
+- Non-blocking: spawns workers as needed.
+- Auto-terminates extra idle workers (configurable).
+- Per-call timeout support (default `5000ms`, use `Infinity` to disable).
+
+### API
+
+| Property    | Type     | Params                  | Return   | Description                                                                |
+| ----------- | -------- | ----------------------- | -------- | -------------------------------------------------------------------------- |
+| `func`      | function | `funcName`, `timeoutMs` | function | Returns a callable function by name, with optional timeout in milliseconds |
+| `terminate` | function | –                       | –        | Terminates all active worker threads                                       |
 
 ### Example
 
 This example focuses on the additional features of the DynamicWorker class.
 Let's use the same code for `worker.ts` as in [Usage](#usage):
 
-main.ts
+**main.ts**
 
 ```ts
 import { DynamicWorker, TimeoutError } from "async-multi-worker";
 
-const workerURL = new URL("./worker.ts", import.meta.url);
+const workerUrl = new URL("./worker.ts", import.meta.url);
+const dynamicWorker = new DynamicWorker(workerUrl, 2); // keep up to 2 idle workers
 
-const dynamicWorker = new DynamicWorker(workerURL, 1); // DynamicWorker with 1 max non-busy worker
-
-const addition = dynamicWorker.func("add", 2000); // use 2000ms as timeout
+const add = dynamicWorker.func("add", 2000); // 2000ms timeout
 
 try {
-  const result = await addition(1, 2);
+  const result = await add(1, 2);
+  console.log("Result:", result);
 } catch (error) {
-  if (error instanceof TimeoutError)
-    console.log("Addition function execution has timed out", error);
-  else console.log("Unknown error", error);
+  if (error instanceof TimeoutError) {
+    console.error("Function execution timed out", error);
+  } else {
+    console.error("Unexpected error", error);
+  }
 }
 ```
+
+---
+
+## Configuration
+
+`DynamicWorker` constructor:
+
+```ts
+new DynamicWorker(workerUrl: URL, maxIdleWorkers?: number)
+```
+
+| Option           | Default | Description                                  |
+| ---------------- | ------- | -------------------------------------------- |
+| `maxIdleWorkers` | `5`     | Max number of non-busy workers to keep alive |
+
+Per-call timeout (optional) is set when obtaining a function:
+
+```ts
+const fn = dynamicWorker.func(
+  "taskName",
+  timeoutMs /* default 5000; use Infinity to disable */
+);
+```
+
+---
+
+## Contributing
+
+Contributions are welcome!
+
+1. Fork the repo
+2. Create a feature branch
+3. Run tests with `npm test`
+4. Open a Pull Request
 
 ---
 
