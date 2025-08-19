@@ -10,7 +10,7 @@
 - [Installation](#installation)
 - [Usage](#usage)
 - [DedicatedWorker](#dedicatedworker)
-- [DynamicWorker](#dynamicworker)
+- [ElasticWorker](#elasticworker)
 - [Configuration](#configuration)
 - [Contributing](#contributing)
 - [License](#license)
@@ -20,13 +20,13 @@
 `async-multi-worker` provides a simple abstraction over **Web Workers** (browser) and **Worker Threads** (Node.js).
 It lets you offload CPU‑intensive or blocking tasks to workers **without manually handling worker setup or lifecycle**.
 
-This package exports two worker classes: [DedicatedWorker](#dedicatedworker) and [DynamicWorker](#dynamicworker).
+This package exports two worker classes: [DedicatedWorker](#dedicatedworker) and [ElasticWorker](#elasticworker).
 Each has its pros and cons:
 
 | Worker          | Pros                                                | Cons                                                         |
 | --------------- | --------------------------------------------------- | ------------------------------------------------------------ |
 | DedicatedWorker | Can maintain persistent state across calls          | Queues calls; only one runs at a time (sequential execution) |
-| DynamicWorker   | Non-blocking; can handle multiple tasks in parallel | Cannot maintain state between calls (stateless)              |
+| ElasticWorker   | Non-blocking; can handle multiple tasks in parallel | Cannot maintain state between calls (stateless)              |
 
 > **Compatibility:** Works in modern browsers (Web Worker) and Node.js (worker_threads). ESM import is recommended.
 
@@ -65,17 +65,17 @@ initWorker(calc);
 
 ### main.ts
 
-Use `DedicatedWorker` or `DynamicWorker` depending on your needs.
+Use `DedicatedWorker` or `ElasticWorker` depending on your needs.
 
 ```ts
-import { DynamicWorker } from "async-multi-worker";
+import { ElasticWorker } from "async-multi-worker";
 import type { Calculator } from "./worker.ts";
 
 const workerUrl = new URL("./worker.ts", import.meta.url);
-const dynamicWorker = new DynamicWorker(workerUrl);
+const elasticWorker = new ElasticWorker(workerUrl);
 
-const addition = dynamicWorker.func("add");
-const subtract = dynamicWorker.func("sub");
+const addition = elasticWorker.func("add");
+const subtract = elasticWorker.func("sub");
 
 const addResult = await addition(1, 2); // runs `add` in a worker thread
 const subResult = await subtract(5, 3); // runs `sub` in a worker thread
@@ -84,7 +84,7 @@ const subResult = await subtract(5, 3); // runs `sub` in a worker thread
 **Flow (at a glance):**
 
 ```
-main.ts → DedicatedWorker/DynamicWorker → worker.ts (your functions)
+main.ts → DedicatedWorker/ElasticWorker → worker.ts (your functions)
 ```
 
 > **Bundler notes:** The `new URL("./worker.ts", import.meta.url)` pattern works in ESM-aware bundlers (Vite/Rollup) and Node ESM. For other setups, ensure your bundler handles worker assets accordingly.
@@ -170,9 +170,9 @@ console.log(await lastResult()); // 30
 
 ---
 
-## DynamicWorker
+## ElasticWorker
 
-A `DynamicWorker` can **spawn multiple workers on demand**, making it ideal for parallel tasks.
+A `ElasticWorker` can **spawn multiple workers on demand**, making it ideal for parallel tasks.
 Workers are terminated automatically when idle (beyond your configured idle limit).
 
 ### Features
@@ -190,18 +190,18 @@ Workers are terminated automatically when idle (beyond your configured idle limi
 
 ### Example
 
-This example focuses on the additional features of the DynamicWorker class.
+This example focuses on the additional features of the ElasticWorker class.
 Let's use the same code for `worker.ts` as in [Usage](#usage):
 
 **main.ts**
 
 ```ts
-import { DynamicWorker, TimeoutError } from "async-multi-worker";
+import { ElasticWorker, TimeoutError } from "async-multi-worker";
 
 const workerUrl = new URL("./worker.ts", import.meta.url);
-const dynamicWorker = new DynamicWorker(workerUrl, 2); // keep up to 2 idle workers
+const elasticWorker = new ElasticWorker(workerUrl, 2); // keep up to 2 idle workers
 
-const add = dynamicWorker.func("add", 2000); // 2000ms timeout
+const add = elasticWorker.func("add", 2000); // 2000ms timeout
 
 try {
   const result = await add(1, 2);
@@ -219,10 +219,10 @@ try {
 
 ## Configuration
 
-`DynamicWorker` constructor:
+`ElasticWorker` constructor:
 
 ```ts
-new DynamicWorker(workerUrl: URL, maxIdleWorkers?: number)
+new ElasticWorker(workerUrl: URL, maxIdleWorkers?: number)
 ```
 
 | Option           | Default | Description                                  |
@@ -232,7 +232,7 @@ new DynamicWorker(workerUrl: URL, maxIdleWorkers?: number)
 Per-call timeout (optional) is set when obtaining a function:
 
 ```ts
-const fn = dynamicWorker.func(
+const fn = elasticWorker.func(
   "taskName",
   timeoutMs /* default 5000; use Infinity to disable */
 );

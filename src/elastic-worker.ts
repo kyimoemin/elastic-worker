@@ -22,7 +22,7 @@ type MessageListenerParam = {
  * @see func for calling worker functions
  * @see terminate for cleanup
  */
-export class DynamicWorker<T extends FunctionsRecord>
+export class ElasticWorker<T extends FunctionsRecord>
   implements WorkerProxy<T>
 {
   private readonly workerManager: WorkerManager;
