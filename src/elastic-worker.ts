@@ -1,11 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import type { ResponsePayload, FunctionsRecord, WorkerProxy } from "./types";
-import { WorkerInfo, WorkerManager } from "./worker-manager";
-import { getUUID } from "#env-adapter";
+import { getUUID, UniversalWorker } from "#env-adapter";
 import { TimeoutError } from "./errors";
+import type { FunctionsRecord, ResponsePayload, WorkerProxy } from "./types";
+import { WorkerManager } from "./worker-manager";
 
 type MessageListenerParam = {
-  workerInfo: WorkerInfo;
+  worker: UniversalWorker;
   resolve: (result: any) => any;
   reject: (error: Error) => any;
   timeoutId?: ReturnType<typeof setTimeout>;
@@ -32,7 +32,7 @@ export class ElasticWorker<T extends FunctionsRecord>
   }
 
   private messageListener({
-    workerInfo,
+    worker,
     resolve,
     reject,
     timeoutId,
@@ -47,8 +47,8 @@ export class ElasticWorker<T extends FunctionsRecord>
       } else {
         resolve(result);
       }
-      workerInfo.busy = false;
       clearTimeout(timeoutId);
+      this.workerManager.idleWorker(worker);
     };
   }
 
@@ -69,27 +69,39 @@ export class ElasticWorker<T extends FunctionsRecord>
       new Promise<ReturnType<T[K]>>((resolve, reject) => {
         const id = getUUID();
 
-        const workerInfo = this.workerManager.getWorker();
+        const worker = this.workerManager.getWorker();
 
         let timeoutId: ReturnType<typeof setTimeout> | undefined;
         if (timeoutMs && timeoutMs !== Infinity && timeoutMs > 0) {
           timeoutId = setTimeout(() => {
             reject(new TimeoutError(timeoutMs));
-            this.workerManager.terminateWorker(workerInfo.worker);
+            this.workerManager.terminateWorker(worker);
           }, timeoutMs);
         }
 
-        workerInfo.worker.onmessage = this.messageListener({
-          workerInfo,
+        worker.onmessage = this.messageListener({
+          worker,
           resolve,
           reject,
           timeoutId,
         });
-        workerInfo.worker.onerror = reject;
-        workerInfo.busy = true;
-        workerInfo.worker.postMessage({ func: funcName, args, id });
+        worker.onerror = this.onWorkerError({ reject, worker });
+        worker.postMessage({ func: funcName, args, id });
       });
   };
+
+  private onWorkerError({
+    reject,
+    worker,
+  }: {
+    reject: (error: Error) => void;
+    worker: UniversalWorker;
+  }) {
+    return (error: Error) => {
+      reject(error);
+      this.workerManager.terminateWorker(worker);
+    };
+  }
   /**
    * Terminates the worker and cleans up all pending calls.
    * This method removes all event listeners and clears the calls map.

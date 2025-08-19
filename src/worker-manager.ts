@@ -63,26 +63,33 @@ export class WorkerManager {
    * @returns An available WorkerInfo instance.
    */
   getWorker = () => {
-    this.removeNonBusyWorkers();
     for (const workerInfo of this.workers.values()) {
-      if (!workerInfo.busy) return workerInfo;
+      if (!workerInfo.busy) {
+        workerInfo.busy = true;
+        return workerInfo.worker;
+      }
     }
-    return this.spawnWorker();
+    const workerInfo = this.spawnWorker();
+    workerInfo.busy = true;
+    return workerInfo.worker;
   };
 
   /**
-   * Removes excess non-busy workers from the pool, keeping only up to MAX_NON_BUSY_WORKERS.
+   *
+   * @deprecated invoke idleWorker when the process is done
+   *
+   * Removes excess idle workers from the pool, keeping only up to MAX_IDLE_WORKERS.
    */
-  private removeNonBusyWorkers = () => {
-    const nonBusyWorkers: WorkerInfo[] = [];
+  private removeIdleWorkers = () => {
+    const idleWorkers: WorkerInfo[] = [];
     for (const workerInfo of this.workers.values()) {
-      if (!workerInfo.busy) nonBusyWorkers.push(workerInfo);
+      if (!workerInfo.busy) idleWorkers.push(workerInfo);
     }
-    if (nonBusyWorkers.length <= this.MAX_IDLE_WORKERS) return;
-    const excessWorkers = nonBusyWorkers.slice(this.MAX_IDLE_WORKERS);
+    if (idleWorkers.length <= this.MAX_IDLE_WORKERS) return;
+    const excessWorkers = idleWorkers.slice(this.MAX_IDLE_WORKERS);
     for (const workerInfo of excessWorkers) {
-      workerInfo.worker.terminate();
       this.workers.delete(workerInfo.worker);
+      workerInfo.worker.terminate();
     }
   };
 
@@ -92,9 +99,30 @@ export class WorkerManager {
    */
   terminateWorker = (worker: UniversalWorker) => {
     const workerInfo = this.workers.get(worker);
-    if (workerInfo) {
-      workerInfo.worker.terminate();
-      this.workers.delete(worker);
+    if (workerInfo) this.workers.delete(worker);
+    worker.terminate();
+  };
+
+  /**
+   * Terminates a specific Worker and removes it from the pool when it is idle and existing workers exceed MAX_IDLE_WORKERS .
+   * @param worker The Worker instance to terminate.
+   */
+  idleWorker = (worker: UniversalWorker) => {
+    const workerInfo = this.workers.get(worker);
+    if (!workerInfo) return worker.terminate();
+    workerInfo.busy = false;
+
+    this.eliminateIfExceedingMaxIdleWorkers(workerInfo);
+  };
+
+  private eliminateIfExceedingMaxIdleWorkers = (workerInfo: WorkerInfo) => {
+    let count = 0;
+    for (const info of this.workers.values()) {
+      if (!info.busy) count++;
+      if (count > this.MAX_IDLE_WORKERS) {
+        this.workers.delete(workerInfo.worker);
+        workerInfo.worker.terminate();
+      }
     }
   };
 
