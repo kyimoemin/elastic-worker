@@ -111,6 +111,7 @@ It can maintain **persistent state**, but tasks are executed sequentially (queue
 ```ts
 import { initWorker } from "async-multi-worker";
 
+// export this class so it can be imported as a type in main.ts
 export class Calculator {
   result: number;
 
