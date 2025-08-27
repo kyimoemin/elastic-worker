@@ -4,12 +4,12 @@
     "module": "esnext",
     "moduleResolution": "bundler",
     "declaration": true,
-    "declarationMap": true,
-    "emitDeclarationOnly": false,
-    "outDir": "dist/types",
+    "declarationMap": false,
+    "emitDeclarationOnly": true,
+
+    "rootDir": "src",
     "skipLibCheck": true,
-    "strict": true,
-    "isolatedModules": true
+    "strict": true
   },
   "include": ["src"]
 }

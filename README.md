@@ -72,6 +72,14 @@ import { ElasticWorker } from "async-multi-worker";
 import type { Calculator } from "./worker.ts";
 
 const workerUrl = new URL("./worker.ts", import.meta.url);
+/**
+ * or you write as like this for CJS setup.
+ * import path from "path";
+ * import { pathToFileURL } from "url";
+ *
+ * const workerUrl = pathToFileURL(path.resolve("./worker.js"));
+ *
+ */
 const elasticWorker = new ElasticWorker(workerUrl);
 
 const addition = elasticWorker.func("add");
