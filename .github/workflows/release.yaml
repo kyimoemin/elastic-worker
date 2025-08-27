@@ -20,11 +20,7 @@ jobs:
 
       - run: npm pkg fix
 
-      - run: npm run test
-
       - run: npm run build
-
-      - run: npm run test-build
 
       - run: npm publish
         env:

@@ -7,8 +7,8 @@
   "module": "./dist/browser/index.js",
   "scripts": {
     "build": "rollup -c",
-    "test-build": "vitest  --environment=node tests/build",
-    "test": "vitest --environment=node tests/pre-build"
+    "postbuild": "vitest  --environment=node tests/post-build",
+    "prebuild": "vitest --environment=node tests/pre-build"
   },
   "keywords": [
     "async-worker",
