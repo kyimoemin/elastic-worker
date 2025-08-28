@@ -45,7 +45,6 @@ describe("DedicatedWorker", () => {
 });
 
 describe("ElasticWorker", () => {
-  console.log("meta url", import.meta.url);
   const workerURL = new URL("./dummy-worker.js", import.meta.url);
   const elasticWorker = new ElasticWorker(workerURL);
   it("should be defined", () => {
