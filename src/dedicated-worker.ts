@@ -51,12 +51,12 @@ export class DedicatedWorker<T extends FunctionsRecord>
     return new UniversalWorker(this.workerURL);
   }
 
-  private cleanup(error?: Error) {
+  private cleanup = (error?: Error) => {
     for (const { reject } of this.calls.values()) {
       reject(error ?? new Error("Worker was terminated"));
     }
     this.calls.clear();
-  }
+  };
 
   /**
    * Returns a function that calls a method in the worker asynchronously with optional timeout.

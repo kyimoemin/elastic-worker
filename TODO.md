@@ -1,8 +1,15 @@
 # async-multi-worker
 
+## feature
+
+- [ ] respawn new worker thread and carry data when DedicatedWorker is terminated
+- [ ] use SharedBufferArray for ElasticWorker
+- [x] allow path url
+- [x] enable cjs
+
 ## fix
 
-- [ ] worker terminated error
+- [x] worker terminated error
 
 ## Nodejs support
 
