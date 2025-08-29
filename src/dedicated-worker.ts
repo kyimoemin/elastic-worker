@@ -45,6 +45,7 @@ export class DedicatedWorker<T extends FunctionsRecord>
       this.calls.delete(id);
     };
     this.worker.onerror = this.cleanup;
+    this.worker.onexit = () => this.cleanup();
   }
 
   private spawnWorker() {

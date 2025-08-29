@@ -4,10 +4,15 @@ const add = (a, b) => a + b;
 
 const subtract = (a, b) => a - b;
 
+const fibonacci = (n) => {
+  if (n <= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+};
+
 const error = (a, b) => {
   throw new Error("fail");
 };
 
-const calculator = { add, subtract, error };
+const calculator = { add, subtract, error, fibonacci };
 
 initWorker(calculator);
