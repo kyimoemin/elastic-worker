@@ -44,6 +44,7 @@ export class WorkerManager {
   constructor(workerURL: URL, maxIdleWorkers: number = 5) {
     this.workerURL = workerURL;
     this.MAX_IDLE_WORKERS = maxIdleWorkers;
+    this.spawnWorker();
   }
 
   /**
