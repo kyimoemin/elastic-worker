@@ -1,5 +1,10 @@
 import { Host } from "#env-adapter";
-import type { FunctionsRecord, RequestPayload, ResponsePayload } from "./types";
+import type {
+  FunctionsRecord,
+  RequestPayload,
+  ResponsePayload,
+  HostInterface,
+} from "./types";
 
 /**
  *
@@ -7,7 +12,9 @@ import type { FunctionsRecord, RequestPayload, ResponsePayload } from "./types";
  * @returns The host instance for the worker. it was returns for testing purpose only
  *  do not use it in production code.
  */
-export const initWorker = <T extends FunctionsRecord>(obj: T) => {
+export const initWorker = <T extends FunctionsRecord>(
+  obj: T
+): HostInterface => {
   const host = new Host();
   host.onmessage = async (data) => {
     const { func, args, id } = data as RequestPayload<Parameters<T[keyof T]>>;
@@ -31,5 +38,6 @@ export const initWorker = <T extends FunctionsRecord>(obj: T) => {
     }
   };
   Object.freeze(host);
-  return host;
+  // Return the minimal public interface to avoid leaking internal adapter types
+  return host as HostInterface;
 };
