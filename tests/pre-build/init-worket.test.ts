@@ -74,7 +74,7 @@ describe("initWorker", () => {
     const call = host.postMessage.mock.calls[0][0];
     expect(call.id).toBe("3");
     expect(call.error).toBeDefined();
-    expect(call.error.message).toMatch(/not found/);
+    expect(call.error.message).toBe("Function 'notfound' not found in worker.");
     expect(call.result).toBeUndefined();
   });
 });
