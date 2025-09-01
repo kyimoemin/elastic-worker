@@ -38,6 +38,5 @@ export const initWorker = <T extends FunctionsRecord>(
     }
   };
   Object.freeze(host);
-  // Return the minimal public interface to avoid leaking internal adapter types
-  return host as HostInterface;
+  return host;
 };

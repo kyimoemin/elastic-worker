@@ -2,8 +2,6 @@
 
 ## feature
 
-- [ ] respawn new worker thread and carry data when DedicatedWorker is terminated
-- [ ] use SharedBufferArray for ElasticWorker
 - [x] allow path url
 - [x] enable cjs
 
