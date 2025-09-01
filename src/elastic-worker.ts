@@ -86,9 +86,16 @@ export class ElasticWorker<T extends FunctionsRecord>
           timeoutId,
         });
         worker.onerror = this.onWorkerError({ reject, worker });
+        worker.onexit = this.onWorkerExit(reject);
         worker.postMessage({ func: funcName, args, id });
       });
   };
+
+  private onWorkerExit(reject: (error: Error) => void) {
+    return () => {
+      reject(new Error("Worker was terminated"));
+    };
+  }
 
   private onWorkerError({
     reject,

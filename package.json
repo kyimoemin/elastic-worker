@@ -7,8 +7,8 @@
   "module": "./dist/browser/index.js",
   "scripts": {
     "build": "rollup -c",
-    "test-node": "vitest  --environment=node tests/node",
-    "test-web": "vitest --environment=jsdom tests/browser"
+    "postbuild": "vitest  --environment=node tests/post-build",
+    "prebuild": "vitest --environment=node tests/pre-build"
   },
   "keywords": [
     "async-worker",
@@ -29,9 +29,17 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "node": "./dist/node/index.js",
-      "browser": "./dist/browser/index.js",
-      "default": "./dist/browser/index.js"
+      "browser": {
+        "import": "./dist/esm/browser/index.js",
+        "require": "./dist/cjs/browser/index.cjs"
+      },
+      "node": {
+        "import": "./dist/esm/node/index.js",
+        "require": "./dist/cjs/node/index.cjs"
+      },
+      "import": "./dist/esm/node/index.js",
+      "require": "./dist/cjs/node/index.cjs",
+      "default": "./dist/esm/node/index.js"
     }
   },
   "imports": {

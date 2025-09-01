@@ -5,7 +5,7 @@ export class Host implements HostInterface {
   constructor() {
     if (!self) {
       throw new Error(
-        "self is not available. This code must be run in a worker thread context."
+        "`self` is not available. Make sure you are running on browser environment."
       );
     }
     this.postMessage = (data) => self.postMessage(data);

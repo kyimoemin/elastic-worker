@@ -8,20 +8,15 @@ import alias from "@rollup/plugin-alias";
 
 const input = "src/index.ts";
 
-/**
- * Shared JS build settings.
- * `preserveModules` keeps your folder structure and ensures .js extensions
- * are written correctly in output imports.
- */
-const mkJsBuild = ({ env }) => ({
+const mkJsBuild = ({ env, format }) => ({
   input,
   output: {
-    dir: `dist/${env}`,
-    format: "esm",
+    dir: `dist/${format}/${env}`,
+    format, // "esm" | "cjs"
     sourcemap: false,
     preserveModules: true,
-    entryFileNames: "[name].js", // ensures .js extension
-    chunkFileNames: "[name]-[hash].js",
+    entryFileNames: format === "esm" ? "[name].js" : "[name].cjs",
+    chunkFileNames: format === "esm" ? "[name]-[hash].js" : "[name]-[hash].cjs",
     exports: "named",
   },
   plugins: [
@@ -37,8 +32,8 @@ const mkJsBuild = ({ env }) => ({
       ],
     }),
     resolve({
-      browser: env === "browser", // tells Rollup to prefer browser field
-      preferBuiltins: env === "node", // keep Node built-ins for node build
+      browser: env === "browser",
+      preferBuiltins: env === "node",
     }),
     commonjs(),
     json(),
@@ -46,26 +41,27 @@ const mkJsBuild = ({ env }) => ({
       tsconfig: "./tsconfig.json",
       declaration: true,
       declarationMap: false,
-      outDir: `dist/${env}/types`, // temp; we’ll merge types below
+      outDir: `dist/${format}/${env}/types`, // emit once; we’ll point "types" to a flat index below
       rootDir: "src",
     }),
   ],
   external: [
-    // add externals that consumers should provide (e.g. react)
-    // "react"
+    // e.g. "react"
   ],
 });
 
 export default [
-  // 1) Node ESM build
-  mkJsBuild({ env: "node" }),
+  // ESM (node + browser)
+  mkJsBuild({ env: "node", format: "esm" }),
+  mkJsBuild({ env: "browser", format: "esm" }),
 
-  // 2) Browser ESM build
-  mkJsBuild({ env: "browser" }),
+  // CJS (node + browser)
+  mkJsBuild({ env: "node", format: "cjs" }),
+  mkJsBuild({ env: "browser", format: "cjs" }),
 
-  // 3) Bundle and flatten .d.ts (from either output)
+  // Flatten .d.ts
   {
-    input: "dist/node/types/index.d.ts",
+    input: "dist/esm/node/types/index.d.ts",
     output: { file: "dist/index.d.ts", format: "es" },
     plugins: [dts()],
   },

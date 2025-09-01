@@ -1,8 +1,13 @@
 # async-multi-worker
 
+## feature
+
+- [x] allow path url
+- [x] enable cjs
+
 ## fix
 
-- [ ] worker terminated error
+- [x] worker terminated error
 
 ## Nodejs support
 

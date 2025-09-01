@@ -5,3 +5,6 @@ tests/
 examples/
 src/
 .github/
+TODO.md
+rollup.config.js
+IMPROVEMENTS.md

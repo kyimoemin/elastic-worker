@@ -1,20 +1,32 @@
 import { describe, it, expect } from "vitest";
-import { UniversalWorker } from "../../dist/node/node/universal-worker";
-import { DedicatedWorker, ElasticWorker } from "../../dist/node/index";
+import {
+  DedicatedWorker,
+  ElasticWorker,
+  TimeoutError,
+  initWorker,
+} from "async-multi-worker";
 
-describe("UniversalWorker", () => {
+// # Tests for build files
+
+describe("initWorker", () => {
   it("should be defined", () => {
-    expect(UniversalWorker).toBeDefined();
+    expect(initWorker).toBeDefined();
   });
+  it("should be a function with correct parameters", () => {
+    expect(typeof initWorker).toBe("function");
+    expect(initWorker.length).toBe(1);
+  });
+});
 
-  it("should return a UniversalWorker instance for a valid worker URL", () => {
-    // Use a dummy worker script path (must exist in dist for Node.js)
-    // getWorker should not throw and should return an object with UniversalWorker methods
-    const worker = new UniversalWorker("./dummy-worker.js");
-    expect(worker).toBeDefined();
-    expect(typeof worker.postMessage).toBe("function");
-    expect(typeof worker.terminate).toBe("function");
-    worker.terminate();
+describe("TimeoutError", () => {
+  it("should be defined", () => {
+    expect(TimeoutError).toBeDefined();
+  });
+  it("should throw TimeoutError correctly", () => {
+    const timeoutError = new TimeoutError(5000);
+    expect(timeoutError).toBeInstanceOf(Error);
+    expect(timeoutError.message).toBe("Worker call timed out after 5000ms");
+    expect(timeoutError.name).toBe("TimeoutError");
   });
 });
 
@@ -33,7 +45,6 @@ describe("DedicatedWorker", () => {
 });
 
 describe("ElasticWorker", () => {
-  console.log("meta url", import.meta.url);
   const workerURL = new URL("./dummy-worker.js", import.meta.url);
   const elasticWorker = new ElasticWorker(workerURL);
   it("should be defined", () => {
