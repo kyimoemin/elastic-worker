@@ -28,8 +28,6 @@ Each has its pros and cons:
 | DedicatedWorker | Can maintain persistent state across calls          | Queues calls; only one runs at a time (sequential execution) |
 | ElasticWorker   | Non-blocking; can handle multiple tasks in parallel | Cannot maintain state between calls (stateless)              |
 
-> **Compatibility:** Works in modern browsers (Web Worker) and Node.js (worker_threads). ESM import is recommended.
-
 ## Installation
 
 ```bash
@@ -94,8 +92,6 @@ const subResult = await subtract(5, 3); // runs `sub` in a worker thread
 ```
 main.ts → DedicatedWorker/ElasticWorker → worker.ts (your functions)
 ```
-
-> **Bundler notes:** The `new URL("./worker.ts", import.meta.url)` pattern works in ESM-aware bundlers (Vite/Rollup) and Node ESM. For other setups, ensure your bundler handles worker assets accordingly.
 
 ---
 
