@@ -123,6 +123,7 @@ export class WorkerManager {
       if (count > this.MAX_IDLE_WORKERS) {
         this.workers.delete(workerInfo.worker);
         workerInfo.worker.terminate();
+        break;
       }
     }
   };
