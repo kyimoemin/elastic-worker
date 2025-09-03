@@ -44,6 +44,7 @@ export class WorkerManager {
   constructor(workerURL: URL, maxIdleWorkers: number = 5) {
     this.workerURL = workerURL;
     this.MAX_IDLE_WORKERS = maxIdleWorkers;
+    this.spawnWorker();
   }
 
   /**
@@ -122,6 +123,7 @@ export class WorkerManager {
       if (count > this.MAX_IDLE_WORKERS) {
         this.workers.delete(workerInfo.worker);
         workerInfo.worker.terminate();
+        break;
       }
     }
   };
