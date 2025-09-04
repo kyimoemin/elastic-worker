@@ -1,4 +1,4 @@
-import { UniversalWorker } from "../../../src/browser/universal-worker";
+import { UniversalWorker } from "../../../src/node/universal-worker";
 import { describe, expect, it } from "vitest";
 
 class MockWorker {

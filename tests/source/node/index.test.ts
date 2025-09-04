@@ -1,13 +1,5 @@
-import { describe, expect, it, afterAll } from "vitest";
-import { Host, UniversalWorker, getUUID } from "../../../src/browser/index";
-import nodeCrypto from "crypto";
-
-const originalCrypto = globalThis.crypto;
-globalThis.crypto = nodeCrypto as any;
-
-afterAll(() => {
-  globalThis.crypto = originalCrypto;
-});
+import { describe, expect, it } from "vitest";
+import { Host, UniversalWorker, getUUID } from "../../../src/node/index";
 
 describe("Necessary modules should be exported", () => {
   it("should be exported", () => {
