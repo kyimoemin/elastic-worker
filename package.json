@@ -1,14 +1,13 @@
 {
   "name": "async-multi-worker",
-  "version": "1.2.1",
+  "version": "1.2.2",
   "description": "Use worker as simple asynchronous function",
   "type": "module",
   "main": "./dist/node/index.js",
   "module": "./dist/browser/index.js",
   "scripts": {
     "build": "rollup -c",
-    "postbuild": "vitest  --environment=node tests/post-build",
-    "prebuild": "vitest --environment=node tests/pre-build"
+    "postbuild": "vitest  --environment=node tests"
   },
   "keywords": [
     "async-worker",
