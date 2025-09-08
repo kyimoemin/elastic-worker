@@ -31,11 +31,8 @@ beforeEach(() => {
 });
 
 afterEach(() => {
-  vi.unmock("worker_threads");
-  vi.unmock("#env-adapter");
   vi.resetModules();
   vi.clearAllMocks();
-  console.log("mocks cleared", mockHost);
 });
 
 let functions;
