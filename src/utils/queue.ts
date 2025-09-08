@@ -5,7 +5,7 @@ export class Queue<T> {
   private head: number = 0;
   private tail: number = 0;
 
-  private maxSize: number;
+  readonly maxSize: number;
 
   constructor(maxSize: number = Infinity) {
     this.maxSize = maxSize;
