@@ -1,14 +1,6 @@
-import {
-  describe,
-  it,
-  expect,
-  vi,
-  beforeEach,
-  afterEach,
-  afterAll,
-} from "vitest";
-import { WorkerManager } from "../../src/worker-manager";
 import { UniversalWorker } from "#env-adapter";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { WorkerPool } from "../../src/worker-pool";
 
 // Mock UniversalWorker for testing
 vi.mock("#env-adapter", () => {
@@ -21,41 +13,41 @@ vi.mock("#env-adapter", () => {
   };
 });
 
-describe("WorkerManager", () => {
+describe("WorkerPool", () => {
   let workerURL: URL;
-  let manager: WorkerManager;
+  let workerPool: WorkerPool;
   beforeEach(() => {
     workerURL = new URL("./dummy-worker.js", import.meta.url);
-    manager = new WorkerManager(workerURL, 2); // set max idle to 2 for easier testing
+    workerPool = new WorkerPool(workerURL, 2); // set max idle to 2 for easier testing
   });
 
   afterEach(() => {
-    manager.terminateAllWorkers();
+    workerPool.terminateAllWorkers();
     vi.clearAllMocks();
   });
 
-  it("should create a WorkerManager instance", () => {
-    expect(manager).toBeInstanceOf(WorkerManager);
-    expect(manager.MAX_IDLE_WORKERS).toBe(2);
+  it("should create a WorkerPool instance", () => {
+    expect(workerPool).toBeInstanceOf(WorkerPool);
+    expect(workerPool.MAX_IDLE_WORKERS).toBe(2);
   });
 
   it("should spawn and reuse workers", () => {
-    const worker1 = manager.getWorker();
-    const worker2 = manager.getWorker();
+    const worker1 = workerPool.getWorker();
+    const worker2 = workerPool.getWorker();
     expect(worker1).not.toBe(worker2);
     // Mark worker1 as idle, should be reused
-    manager.idleWorker(worker1);
-    const worker3 = manager.getWorker();
+    workerPool.idleWorker(worker1);
+    const worker3 = workerPool.getWorker();
     expect(worker3).toBe(worker1);
   });
 
   it("should not exceed max idle workers", () => {
-    const worker1 = manager.getWorker();
-    const worker2 = manager.getWorker();
-    const worker3 = manager.getWorker();
-    manager.idleWorker(worker1);
-    manager.idleWorker(worker2);
-    manager.idleWorker(worker3); // triggers elimination
+    const worker1 = workerPool.getWorker();
+    const worker2 = workerPool.getWorker();
+    const worker3 = workerPool.getWorker();
+    workerPool.idleWorker(worker1);
+    workerPool.idleWorker(worker2);
+    workerPool.idleWorker(worker3); // triggers elimination
     // Only 2 idle workers should remain
     // The third idle worker should be terminated
     expect(
@@ -69,22 +61,22 @@ describe("WorkerManager", () => {
   });
 
   it("should terminate a specific worker", () => {
-    const worker = manager.getWorker();
-    manager.terminateWorker(worker);
+    const worker = workerPool.getWorker();
+    workerPool.terminateWorker(worker);
     expect(worker.terminate).toHaveBeenCalled();
   });
 
   it("should terminate all workers", () => {
-    const worker1 = manager.getWorker();
-    const worker2 = manager.getWorker();
-    manager.terminateAllWorkers();
+    const worker1 = workerPool.getWorker();
+    const worker2 = workerPool.getWorker();
+    workerPool.terminateAllWorkers();
     expect(worker1.terminate).toHaveBeenCalled();
     expect(worker2.terminate).toHaveBeenCalled();
   });
 
   it("should handle idleWorker for unknown worker", () => {
     const fakeWorker = { terminate: vi.fn() };
-    manager.idleWorker(fakeWorker as any);
+    workerPool.idleWorker(fakeWorker as any);
     expect(fakeWorker.terminate).toHaveBeenCalled();
   });
 });

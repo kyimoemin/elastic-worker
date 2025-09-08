@@ -7,25 +7,25 @@ import { UniversalWorker } from "#env-adapter";
  * ## Usage Example
  *
  * ```typescript
- * // 1. Instantiate the manager with the worker script URL
- * const manager = new WorkerManager(new URL('./worker.js', import.meta.url));
+ * // 1. Instantiate the workerPool with the worker script URL
+ * const workerPool = new WorkerPool(new URL('./worker.js', import.meta.url));
  *
  * // 2. Get an available worker (or spawn a new one)
- * const worker = manager.getWorker();
+ * const worker = workerPool.getWorker();
  *
  * // 3. Mark the worker busy/free as needed
  * // worker.busy = true; // when starting a task
  * // worker.busy = false; // when done
  *
  * // 4. Terminate a specific worker
- * manager.terminateWorker(worker);
+ * workerPool.terminateWorker(worker);
  *
  * // 5. Cleanup all workers when done
- * manager.terminateAllWorkers();
+ * workerPool.terminateAllWorkers();
  * ```
  *
  */
-export class WorkerManager {
+export class WorkerPool {
   /**
    * Maximum number of non-busy workers to keep alive. default is 5.
    * This helps manage resource usage by limiting the number of idle workers.
@@ -37,7 +37,7 @@ export class WorkerManager {
   private readonly workerURL: URL;
 
   /**
-   * Creates a WorkerManager instance.
+   * Creates a WorkerPool instance.
    * @param workerURL URL of the worker script.
    * @param maxIdleWorkers Maximum number of non-busy workers to keep alive (default: 5).
    */

@@ -2,7 +2,7 @@
 import { getUUID, UniversalWorker } from "#env-adapter";
 import { TimeoutError } from "./errors";
 import type { FunctionsRecord, ResponsePayload, WorkerProxy } from "./types";
-import { WorkerManager } from "./worker-manager";
+import { WorkerPool } from "./worker-pool";
 
 type MessageListenerParam = {
   worker: UniversalWorker;
@@ -25,10 +25,10 @@ type MessageListenerParam = {
 export class ElasticWorker<T extends FunctionsRecord>
   implements WorkerProxy<T>
 {
-  private readonly workerManager: WorkerManager;
+  private readonly workerPool: WorkerPool;
 
   constructor(workerURL: URL, maxIdleWorkers?: number) {
-    this.workerManager = new WorkerManager(workerURL, maxIdleWorkers);
+    this.workerPool = new WorkerPool(workerURL, maxIdleWorkers);
   }
 
   private messageListener({
@@ -48,7 +48,7 @@ export class ElasticWorker<T extends FunctionsRecord>
         resolve(result);
       }
       clearTimeout(timeoutId);
-      this.workerManager.idleWorker(worker);
+      this.workerPool.idleWorker(worker);
     };
   }
 
@@ -69,13 +69,13 @@ export class ElasticWorker<T extends FunctionsRecord>
       new Promise<ReturnType<T[K]>>((resolve, reject) => {
         const id = getUUID();
 
-        const worker = this.workerManager.getWorker();
+        const worker = this.workerPool.getWorker();
 
         let timeoutId: ReturnType<typeof setTimeout> | undefined;
         if (timeoutMs && timeoutMs !== Infinity && timeoutMs > 0) {
           timeoutId = setTimeout(() => {
             reject(new TimeoutError(timeoutMs));
-            this.workerManager.terminateWorker(worker);
+            this.workerPool.terminateWorker(worker);
           }, timeoutMs);
         }
 
@@ -106,7 +106,7 @@ export class ElasticWorker<T extends FunctionsRecord>
   }) {
     return (error: Error) => {
       reject(error);
-      this.workerManager.terminateWorker(worker);
+      this.workerPool.terminateWorker(worker);
     };
   }
   /**
@@ -117,6 +117,6 @@ export class ElasticWorker<T extends FunctionsRecord>
    * ! Keep in mind that this will stop all workers including the workers with ongoing calls.
    */
   terminate = () => {
-    this.workerManager.terminateAllWorkers();
+    this.workerPool.terminateAllWorkers();
   };
 }

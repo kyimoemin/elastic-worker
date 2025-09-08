@@ -15,7 +15,7 @@ following places are needed to change
 
 - [x] worker
 - [x] init-worker
-- [x] worker-manager
+- [x] worker-pool
 - [x] dedicated-worker
 - [x] dynamic worker
 - [x] add test script in github action
@@ -30,7 +30,7 @@ following places are needed to change
 
 ## improvements
 
-- [ ] rename worker manager to worker pool
+- [x] rename worker manager to worker pool
 
 ### dedicated worker
 
