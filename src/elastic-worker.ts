@@ -2,7 +2,7 @@
 import { getUUID, UniversalWorker } from "#env-adapter";
 import { TimeoutError } from "./errors";
 import type { FunctionsRecord, ResponsePayload, WorkerProxy } from "./types";
-import { WorkerPool } from "./worker-pool";
+import { WorkerPool } from "./utils/worker-pool";
 
 type MessageListenerParam = {
   worker: UniversalWorker;

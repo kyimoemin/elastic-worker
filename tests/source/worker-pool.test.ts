@@ -1,6 +1,6 @@
 import { UniversalWorker } from "#env-adapter";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
-import { WorkerPool } from "../../src/worker-pool";
+import { WorkerPool } from "../../src/utils/worker-pool";
 
 // Mock UniversalWorker for testing
 vi.mock("#env-adapter", () => {
