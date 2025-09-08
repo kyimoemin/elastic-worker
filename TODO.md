@@ -24,6 +24,10 @@ following places are needed to change
 
 - [x] build is still importing browser env in dist
 
+## tests
+
+- [ ] queue
+
 ## improvements
 
 - [ ] rename worker manager to worker pool
