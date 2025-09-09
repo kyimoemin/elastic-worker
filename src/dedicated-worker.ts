@@ -2,6 +2,7 @@
 
 import { ResponsePayload, FunctionsRecord, WorkerProxy } from "./types";
 import { getUUID, UniversalWorker } from "#env-adapter";
+import { WorkerTerminatedError } from "./errors";
 
 type Calls = {
   resolve: (result?: any) => void;
@@ -23,7 +24,7 @@ export class DedicatedWorker<T extends FunctionsRecord>
   implements WorkerProxy<T>
 {
   private readonly calls = new Map<string, Calls>();
-  private readonly worker: UniversalWorker;
+  private worker: UniversalWorker;
 
   private readonly workerURL: URL;
 
@@ -44,8 +45,11 @@ export class DedicatedWorker<T extends FunctionsRecord>
       }
       this.calls.delete(id);
     };
-    this.worker.onerror = this.cleanup;
-    this.worker.onexit = () => this.cleanup();
+    this.worker.onerror = (error) => {
+      this.cleanup(error);
+      this.worker = this.spawnWorker();
+    };
+    this.worker.onexit = () => this.cleanup(new WorkerTerminatedError());
   }
 
   private spawnWorker() {
@@ -54,7 +58,7 @@ export class DedicatedWorker<T extends FunctionsRecord>
 
   private cleanup = (error?: Error) => {
     for (const { reject } of this.calls.values()) {
-      reject(error ?? new Error("Worker was terminated"));
+      reject(error ?? new Error("Something went wrong"));
     }
     this.calls.clear();
   };

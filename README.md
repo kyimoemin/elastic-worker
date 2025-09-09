@@ -100,6 +100,9 @@ main.ts → DedicatedWorker/ElasticWorker → worker.ts (your functions)
 A `DedicatedWorker` runs in a **single worker thread**.
 It can maintain **persistent state**, but tasks are executed sequentially (queued).
 
+> [!CAUTION]
+> A DedicatedWorker loses all state if it crashes. Although it will be respawned on onerror, the state cannot be recovered. Always handle errors with try...catch to minimize crashes and avoid unnecessary state loss.
+
 ### API
 
 | Property    | Type     | Params     | Return   | Description                                   |

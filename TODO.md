@@ -34,9 +34,10 @@ following places are needed to change
 
 ### dedicated worker
 
+- [ ] ditch state fulness for the sake of respawn
 - [ ] max queue size
 - [ ] expose queue length
-- [ ] respawn worker on error(data transfer helper function might needed)
+- [x] respawn worker on error(data transfer helper function might needed)
 
 ### elastic worker
 
@@ -44,5 +45,7 @@ following places are needed to change
 - [ ] support AbortSignal
 - [ ] min idle workers
 - [ ] hot start min worker on start
+- [ ] expose queue length
+- [ ] max queue size
 - [ ] max workers
 - [ ] expose workers length
