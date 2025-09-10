@@ -5,6 +5,7 @@
   "type": "module",
   "main": "./dist/node/index.js",
   "module": "./dist/browser/index.js",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "build": "rollup -c",
     "postbuild": "vitest  --environment=node tests"
