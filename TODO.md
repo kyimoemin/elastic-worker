@@ -24,9 +24,7 @@ following places are needed to change
 
 - [x] build is still importing browser env in dist
 
-## tests
-
-- [ ] queue
+---
 
 ## improvements
 
@@ -34,9 +32,9 @@ following places are needed to change
 
 ### dedicated worker
 
-- [ ] ditch state fulness for the sake of respawn
-- [ ] max queue size
-- [ ] expose queue length
+- [ ] put some flag for terminated worker
+- [x] max queue size
+- [x] expose queue length
 - [x] respawn worker on error(data transfer helper function might needed)
 
 ### elastic worker
@@ -49,3 +47,7 @@ following places are needed to change
 - [ ] max queue size
 - [ ] max workers
 - [ ] expose workers length
+
+## tests
+
+- [ ] queue

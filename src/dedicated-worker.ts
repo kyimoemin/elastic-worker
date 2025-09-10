@@ -7,6 +7,7 @@ import { QueueOverflowError, WorkerTerminatedError } from "./errors";
 type Calls = {
   resolve: (result?: any) => void;
   reject: (error: Error) => void;
+  func: string;
 };
 
 export type DedicatedWorkerOptions = {
@@ -27,8 +28,8 @@ export type DedicatedWorkerOptions = {
 export class DedicatedWorker<T extends FunctionsRecord>
   implements WorkerProxy<T>
 {
-  private readonly calls = new Map<string, Calls>();
-  private worker: UniversalWorker;
+  readonly calls = new Map<string, Calls>();
+  private worker: UniversalWorker | null = null;
 
   readonly maxQueueSize: number;
 
@@ -40,12 +41,12 @@ export class DedicatedWorker<T extends FunctionsRecord>
   ) {
     this.workerURL = workerURL;
     this.maxQueueSize = maxQueueSize;
-    this.worker = this.spawnWorker();
+    this.spawnWorker();
   }
 
   private spawnWorker = () => {
-    const worker = new UniversalWorker(this.workerURL);
-    worker.onmessage = (data) => {
+    this.worker = new UniversalWorker(this.workerURL);
+    this.worker.onmessage = (data) => {
       const { id, result, error } = data as ResponsePayload<any>;
       const call = this.calls.get(id);
       if (!call) return;
@@ -59,21 +60,21 @@ export class DedicatedWorker<T extends FunctionsRecord>
       }
       this.calls.delete(id);
     };
-    worker.onerror = (error) => {
+    this.worker.onerror = (error) => {
       this.cleanup(error);
-      this.worker = this.spawnWorker();
+      this.spawnWorker();
     };
-    worker.onexit = () => {
+    this.worker.onexit = () => {
       this.cleanup(new WorkerTerminatedError());
     };
-    return worker;
   };
 
-  private cleanup = (error?: Error) => {
+  private cleanup = (error: Error) => {
     for (const { reject } of this.calls.values()) {
-      reject(error ?? new Error("Something went wrong"));
+      reject(error);
     }
     this.calls.clear();
+    this.worker = null;
   };
 
   /**
@@ -91,10 +92,11 @@ export class DedicatedWorker<T extends FunctionsRecord>
   func = <K extends keyof T>(funcName: K) => {
     return (...args: Parameters<T[K]>) =>
       new Promise<ReturnType<T[K]>>((resolve, reject) => {
+        if (this.worker === null) return reject(new WorkerTerminatedError());
         if (this.calls.size >= this.maxQueueSize)
           return reject(new QueueOverflowError(this.maxQueueSize));
         const id = getUUID();
-        this.calls.set(id, { resolve, reject });
+        this.calls.set(id, { resolve, reject, func: funcName as string });
         this.worker.postMessage({ func: funcName, args, id });
       });
   };
@@ -110,13 +112,23 @@ export class DedicatedWorker<T extends FunctionsRecord>
     return this.calls.size;
   }
 
+  get isTerminated() {
+    return this.worker === null;
+  }
+
   /**
    * Terminates the worker and cleans up all pending calls.
    * This method removes all event listeners and clears the calls map.
    * It should be called when the worker is no longer needed to prevent memory leaks.
    */
-  terminate = () => {
+  terminate = async () => {
+    await this.worker?.terminate();
     this.cleanup(new WorkerTerminatedError());
-    this.worker.terminate();
+  };
+  /**
+   * Respawns terminated worker.
+   */
+  respawn = () => {
+    this.spawnWorker();
   };
 }

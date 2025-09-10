@@ -16,13 +16,14 @@ export class UniversalWorker implements UniversalWorkerInterface {
 
   set onerror(handler: (error: Error) => void) {
     this.worker.onerror = (event) => handler(event.error);
+    this.worker.onmessageerror = (event) => handler(event.data as Error);
   }
 
   set onexit(handler: (exitCode: number) => void) {
     // Browser workers do not have an exit event like Node.js workers.
   }
 
-  terminate(): void {
-    this.worker.terminate();
+  async terminate(): Promise<void> {
+    return this.worker.terminate();
   }
 }

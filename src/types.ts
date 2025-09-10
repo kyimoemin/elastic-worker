@@ -34,7 +34,10 @@ export interface UniversalWorkerInterface {
 
   onexit(exitCode: number): void;
 
-  terminate(): void;
+  /**
+   * @returns void in browser, exit code or void in node
+   */
+  terminate(): Promise<void | number>;
 }
 
 export interface HostInterface {

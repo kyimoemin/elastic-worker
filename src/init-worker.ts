@@ -1,4 +1,5 @@
 import { Host } from "#env-adapter";
+import { FunctionNotFoundError } from "./errors";
 import type { FunctionsRecord, RequestPayload, ResponsePayload } from "./types";
 
 /**
@@ -11,7 +12,7 @@ export const initWorker = <T extends FunctionsRecord>(obj: T) => {
     const { func, args, id } = data as RequestPayload<Parameters<T[keyof T]>>;
     try {
       if (typeof obj[func] !== "function") {
-        throw new Error(`Function '${String(func)}' not found in worker.`);
+        throw new FunctionNotFoundError(String(func));
       }
       const result = await obj[func](...args);
       host.postMessage({ id, result });

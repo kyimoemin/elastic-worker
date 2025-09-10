@@ -25,3 +25,10 @@ export class WorkerTerminatedError extends Error {
     this.name = "WorkerTerminatedError";
   }
 }
+
+export class FunctionNotFoundError extends Error {
+  constructor(functionName: string) {
+    super(`Function '${functionName}' not found in worker.`);
+    this.name = "FunctionNotFoundError";
+  }
+}

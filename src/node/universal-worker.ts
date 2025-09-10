@@ -18,13 +18,14 @@ export class UniversalWorker implements UniversalWorkerInterface {
 
   set onerror(handler: (error: Error) => void) {
     this.worker.on("error", handler);
+    this.worker.on("messageerror", handler);
   }
 
   set onexit(handler: (exitCode: number) => void) {
     this.worker.on("exit", handler);
   }
 
-  terminate(): void {
-    this.worker.terminate();
+  terminate(): Promise<number> {
+    return this.worker.terminate();
   }
 }
