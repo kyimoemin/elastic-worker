@@ -32,6 +32,7 @@ following places are needed to change
 
 ### dedicated worker
 
+- [ ] expose readonly queue
 - [ ] put some flag for terminated worker
 - [x] max queue size
 - [x] expose queue length
@@ -39,6 +40,7 @@ following places are needed to change
 
 ### elastic worker
 
+- [ ] expose readonly queue
 - [ ] add call queue
 - [ ] support AbortSignal
 - [ ] min idle workers
