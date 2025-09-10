@@ -3,6 +3,7 @@
 import { ResponsePayload, FunctionsRecord, WorkerProxy } from "./types";
 import { getUUID, UniversalWorker } from "#env-adapter";
 import { QueueOverflowError, WorkerTerminatedError } from "./errors";
+import { getReadonlyProxy } from "./utils/readonly-proxy";
 
 type Calls = {
   resolve: (result?: any) => void;
@@ -28,7 +29,11 @@ export type DedicatedWorkerOptions = {
 export class DedicatedWorker<T extends FunctionsRecord>
   implements WorkerProxy<T>
 {
-  readonly calls = new Map<string, Calls>();
+  private readonly calls = new Map<string, Calls>();
+  /**
+   * queue of pending calls (read-only)
+   */
+  readonly queue = getReadonlyProxy(this.calls);
   private worker: UniversalWorker | null = null;
 
   readonly maxQueueSize: number;
@@ -78,11 +83,10 @@ export class DedicatedWorker<T extends FunctionsRecord>
   };
 
   /**
-   * Returns a function that calls a method in the worker asynchronously with optional timeout.
+   * Returns a function that calls a method in the worker asynchronously.
    *
    * @template K - The key of the function in the worker object.
    * @param funcName - The name of the function to call in the worker.
-   * @param timeoutMs - Optional timeout in milliseconds (default: 5000ms).
    * @returns A function that, when called with arguments, returns a Promise resolving to the result of the worker function.
    *
    * @example
@@ -103,13 +107,6 @@ export class DedicatedWorker<T extends FunctionsRecord>
 
   get busy() {
     return this.calls.size > 0;
-  }
-
-  /**
-   * @returns the number of pending calls to the worker.
-   */
-  get queueSize() {
-    return this.calls.size;
   }
 
   get isTerminated() {

@@ -76,9 +76,9 @@ describe("DedicatedWorker", () => {
     const sub = dedicatedWorker.func("subtract");
     const p1 = add(1, 2);
     const p2 = sub(3, 1);
-    expect(dedicatedWorker.queueSize).toBe(2);
+    expect(dedicatedWorker.queue.size).toBe(2);
     await Promise.all([p1, p2]);
-    expect(dedicatedWorker.queueSize).toBe(0);
+    expect(dedicatedWorker.queue.size).toBe(0);
   });
 
   it("should throw QueueOverflowError if maxQueueSize exceeded", async () => {
