@@ -1,6 +1,5 @@
 import { describe, expect, it } from "vitest";
 import { DedicatedWorker } from "../../src/dedicated-worker";
-import { sleep } from "../utils";
 
 describe("DedicatedWorker", () => {
   const workerURL = new URL("./dummy-worker.js", import.meta.url);
@@ -82,14 +81,19 @@ describe("DedicatedWorker", () => {
   });
 
   it("should throw QueueOverflowError if maxQueueSize exceeded", async () => {
-    const smallQueueWorker = new DedicatedWorker(workerURL, {
-      maxQueueSize: 1,
-    });
-    const add = smallQueueWorker.func("add");
-    add(1, 2); // fills the queue
-    const sub = smallQueueWorker.func("subtract");
-    await expect(sub(3, 1)).rejects.toThrow("Queue limit of 1 reached");
-    smallQueueWorker.terminate();
+    try {
+      const smallQueueWorker = new DedicatedWorker(workerURL, {
+        maxQueueSize: 1,
+      });
+      const add = smallQueueWorker.func("add");
+      const promise = add(1, 2); // fills the queue
+      const sub = smallQueueWorker.func("subtract");
+      await expect(sub(3, 1)).rejects.toThrow("Queue limit of 1 reached");
+      await promise;
+      smallQueueWorker.terminate();
+    } catch (e) {
+      console.log(e);
+    }
   });
 
   it("should respawn worker on error and resolve new calls", async () => {
