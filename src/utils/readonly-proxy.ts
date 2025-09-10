@@ -1,3 +1,7 @@
+/**
+ * @param obj - object to be wrapped in a read-only proxy
+ * @returns a read-only proxy for an object.
+ */
 export function getReadonlyProxy<T extends Record<string, any>>(obj: T) {
   return new Proxy(obj, {
     get(target, prop, receiver) {
