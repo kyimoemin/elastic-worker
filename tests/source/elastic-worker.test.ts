@@ -23,7 +23,9 @@ describe("ElasticWorker", () => {
   it("should call worker and reject on error", async () => {
     const fail = elasticWorker.func("fail");
     const promise = fail(1, 2);
-    expect(promise).rejects.toThrow("Function 'fail' not found in worker.");
+    await expect(promise).rejects.toThrow(
+      "Function 'fail' not found in worker."
+    );
   });
 
   it("should timeout if task takes too long", async () => {
