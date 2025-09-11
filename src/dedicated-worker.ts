@@ -31,6 +31,9 @@ export class DedicatedWorker<T extends FunctionsRecord>
 {
   private readonly calls = new Map<string, Calls>();
   /**
+   * > [!CAUTION]
+   * > This property is for debugging purposes only. do not modify or use it to manage the queue.
+   *
    * queue of pending calls (read-only)
    */
   readonly queue = getReadonlyProxy(this.calls);

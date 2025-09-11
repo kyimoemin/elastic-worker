@@ -1,67 +1,79 @@
 import { UniversalWorker } from "#env-adapter";
+import { getReadonlyProxy } from "./readonly-proxy";
+
+export type WorkerPoolOptions = {
+  minPoolSize: number;
+  maxPoolSize: number;
+};
 
 /**
  * Manages a pool of Workers, optimizing resource usage by limiting the number of non-busy workers.
  * Provides methods to spawn, reuse, terminate, and clean up workers.
  *
- * ## Usage Example
- *
- * ```typescript
- * // 1. Instantiate the workerPool with the worker script URL
- * const workerPool = new WorkerPool(new URL('./worker.js', import.meta.url));
- *
- * // 2. Get an available worker (or spawn a new one)
- * const worker = workerPool.getWorker();
- *
- * // 3. Mark the worker busy/free as needed
- * // worker.busy = true; // when starting a task
- * // worker.busy = false; // when done
- *
- * // 4. Terminate a specific worker
- * workerPool.terminateWorker(worker);
- *
- * // 5. Cleanup all workers when done
- * workerPool.terminateAllWorkers();
- * ```
- *
- */
+ * */
 export class WorkerPool {
-  /**
-   * Maximum number of non-busy workers to keep alive. default is 5.
-   * This helps manage resource usage by limiting the number of idle workers.
-   */
-  public readonly MAX_IDLE_WORKERS: number;
+  public readonly minPoolSize: number;
+  public readonly maxPoolSize: number;
 
   private workers: Map<UniversalWorker, WorkerInfo> = new Map();
+
+  /**
+   * > [!CAUTION]
+   * > This property is for debugging purposes only. do not modify or use it to manage the pool.
+   *
+   * A read-only view of the current worker pool.
+   */
+  readonly pool = getReadonlyProxy(this.workers);
 
   private readonly workerURL: URL;
 
   /**
    * Creates a WorkerPool instance.
    * @param workerURL URL of the worker script.
-   * @param maxIdleWorkers Maximum number of non-busy workers to keep alive (default: 5).
+   * @param {object} options Configuration options for the worker pool.
+   * @param {number} options.minPoolSize Minimum number of workers to keep alive
+   * @param {number} options.maxPoolSize Maximum number of non-busy workers to keep alive
    */
-  constructor(workerURL: URL, maxIdleWorkers: number = 5) {
+  constructor(workerURL: URL, { minPoolSize, maxPoolSize }: WorkerPoolOptions) {
     this.workerURL = workerURL;
-    this.MAX_IDLE_WORKERS = maxIdleWorkers;
-    this.spawnWorker();
+    this.minPoolSize = minPoolSize;
+    this.maxPoolSize = maxPoolSize;
+    this.spawnInitialWorkers();
+  }
+
+  private spawnInitialWorkers() {
+    for (let i = 0; i < this.minPoolSize; i++) {
+      this.spawnWorker();
+    }
   }
 
   /**
    * Spawns a new Worker and adds it to the pool.
    * @returns The newly created WorkerInfo instance.
    */
-  private spawnWorker = () => {
+  private spawnWorker() {
     const worker = new UniversalWorker(this.workerURL);
+    worker.onerror = () => this.removeWorker(worker);
+    worker.onexit = () => this.removeWorker(worker);
     const workerInfo = new WorkerInfo(worker);
     this.workers.set(worker, workerInfo);
     return workerInfo;
+  }
+
+  /**
+   * Removes a Worker from the pool.
+   *
+   * @param worker The Worker instance to remove.
+   */
+  private removeWorker = (worker: UniversalWorker) => {
+    const workerInfo = this.workers.get(worker);
+    if (workerInfo) this.workers.delete(worker);
   };
 
   /**
-   * Retrieves an available non-busy Worker from the pool, or spawns a new one if none are available.
-   * Also removes excess non-busy workers.
-   * @returns An available WorkerInfo instance.
+   * Retrieves an available idle Worker from the pool,
+   * or spawns a new one if none are available and the pool has not reached its maximum size.
+   * @returns An available Worker instance. `undefined` if the pool has reached its maximum size and no workers are available.
    */
   getWorker = () => {
     for (const workerInfo of this.workers.values()) {
@@ -70,28 +82,10 @@ export class WorkerPool {
         return workerInfo.worker;
       }
     }
+    if (this.workers.size >= this.maxPoolSize) return undefined;
     const workerInfo = this.spawnWorker();
     workerInfo.busy = true;
     return workerInfo.worker;
-  };
-
-  /**
-   *
-   * @deprecated invoke idleWorker when the process is done
-   *
-   * Removes excess idle workers from the pool, keeping only up to MAX_IDLE_WORKERS.
-   */
-  private removeIdleWorkers = () => {
-    const idleWorkers: WorkerInfo[] = [];
-    for (const workerInfo of this.workers.values()) {
-      if (!workerInfo.busy) idleWorkers.push(workerInfo);
-    }
-    if (idleWorkers.length <= this.MAX_IDLE_WORKERS) return;
-    const excessWorkers = idleWorkers.slice(this.MAX_IDLE_WORKERS);
-    for (const workerInfo of excessWorkers) {
-      this.workers.delete(workerInfo.worker);
-      workerInfo.worker.terminate();
-    }
   };
 
   /**
@@ -99,8 +93,7 @@ export class WorkerPool {
    * @param worker The Worker instance to terminate.
    */
   terminateWorker = (worker: UniversalWorker) => {
-    const workerInfo = this.workers.get(worker);
-    if (workerInfo) this.workers.delete(worker);
+    this.removeWorker(worker);
     worker.terminate();
   };
 
@@ -108,24 +101,20 @@ export class WorkerPool {
    * Terminates a specific Worker and removes it from the pool when it is idle and existing workers exceed MAX_IDLE_WORKERS .
    * @param worker The Worker instance to terminate.
    */
-  idleWorker = (worker: UniversalWorker) => {
+  idleWorker = async (worker: UniversalWorker) => {
+    if (!worker) return;
     const workerInfo = this.workers.get(worker);
     if (!workerInfo) return worker.terminate();
-    workerInfo.busy = false;
 
-    this.eliminateIfExceedingMaxIdleWorkers(workerInfo);
-  };
-
-  private eliminateIfExceedingMaxIdleWorkers = (workerInfo: WorkerInfo) => {
     let count = 0;
     for (const info of this.workers.values()) {
       if (!info.busy) count++;
-      if (count > this.MAX_IDLE_WORKERS) {
+      if (count >= this.minPoolSize) {
         this.workers.delete(workerInfo.worker);
-        workerInfo.worker.terminate();
-        break;
+        return workerInfo.worker.terminate();
       }
     }
+    workerInfo.busy = false;
   };
 
   /**

@@ -16,9 +16,11 @@ vi.mock("#env-adapter", () => {
 describe("WorkerPool", () => {
   let workerURL: URL;
   let workerPool: WorkerPool;
+  const minPoolSize = 1;
+  const maxPoolSize = 2;
   beforeEach(() => {
     workerURL = new URL("./dummy-worker.js", import.meta.url);
-    workerPool = new WorkerPool(workerURL, 2); // set max idle to 2 for easier testing
+    workerPool = new WorkerPool(workerURL, { minPoolSize, maxPoolSize });
   });
 
   afterEach(() => {
@@ -26,9 +28,15 @@ describe("WorkerPool", () => {
     vi.clearAllMocks();
   });
 
-  it("should create a WorkerPool instance", () => {
+  it("should create a WorkerPool instance with correct pool sizes", () => {
     expect(workerPool).toBeInstanceOf(WorkerPool);
-    expect(workerPool.MAX_IDLE_WORKERS).toBe(2);
+    expect(workerPool.minPoolSize).toBe(minPoolSize);
+    expect(workerPool.maxPoolSize).toBe(maxPoolSize);
+  });
+
+  it("should initialize with minPoolSize workers", () => {
+    // The pool should have minPoolSize workers after construction
+    expect((UniversalWorker as any).mock.instances.length).toBe(minPoolSize);
   });
 
   it("should spawn and reuse workers", () => {
@@ -36,42 +44,54 @@ describe("WorkerPool", () => {
     const worker2 = workerPool.getWorker();
     expect(worker1).not.toBe(worker2);
     // Mark worker1 as idle, should be reused
-    workerPool.idleWorker(worker1);
+    if (worker1) workerPool.idleWorker(worker1);
     const worker3 = workerPool.getWorker();
     expect(worker3).toBe(worker1);
   });
 
-  it("should not exceed max idle workers", () => {
+  it("should not exceed maxPoolSize", async () => {
     const worker1 = workerPool.getWorker();
     const worker2 = workerPool.getWorker();
     const worker3 = workerPool.getWorker();
-    workerPool.idleWorker(worker1);
-    workerPool.idleWorker(worker2);
-    workerPool.idleWorker(worker3); // triggers elimination
-    // Only 2 idle workers should remain
-    // The third idle worker should be terminated
-    expect(
-      (UniversalWorker as any).mock.instances.length
-    ).toBeGreaterThanOrEqual(3);
-    // Check terminate called on at least one worker
-    const terminated = (UniversalWorker as any).mock.results.filter(
-      ({ value }: any) => value.terminate.mock.calls.length > 0
-    );
-    expect(terminated.length).toBeGreaterThanOrEqual(1);
+    expect(worker3).toBeUndefined(); // maxPoolSize reached
+    expect(workerPool.pool.size).toBe(maxPoolSize);
+    const workers = [
+      workerPool.idleWorker(worker1!),
+      workerPool.idleWorker(worker2!),
+      workerPool.idleWorker(worker3!),
+    ];
+    await Promise.all(workers);
+  });
+  it("should not exceed maxPoolSize for idle workers", async () => {
+    const worker1 = workerPool.getWorker();
+    const worker2 = workerPool.getWorker();
+    const workers = [
+      workerPool.idleWorker(worker1!),
+      workerPool.idleWorker(worker2!),
+    ];
+    await Promise.all(workers);
+    expect(workerPool.pool.size).toBe(1);
   });
 
   it("should terminate a specific worker", () => {
     const worker = workerPool.getWorker();
-    workerPool.terminateWorker(worker);
-    expect(worker.terminate).toHaveBeenCalled();
+    if (worker) {
+      workerPool.terminateWorker(worker);
+      expect(worker.terminate).toHaveBeenCalled();
+      const terminatedWorker = workerPool.pool.get(worker);
+      expect(terminatedWorker).toBeUndefined();
+    } else {
+      throw new Error("getWorker() returned undefined");
+    }
   });
 
   it("should terminate all workers", () => {
     const worker1 = workerPool.getWorker();
     const worker2 = workerPool.getWorker();
     workerPool.terminateAllWorkers();
-    expect(worker1.terminate).toHaveBeenCalled();
-    expect(worker2.terminate).toHaveBeenCalled();
+    if (worker1) expect(worker1.terminate).toHaveBeenCalled();
+    if (worker2) expect(worker2.terminate).toHaveBeenCalled();
+    expect(workerPool.pool.size).toBe(0);
   });
 
   it("should handle idleWorker for unknown worker", () => {
