@@ -1,7 +1,7 @@
 import { QueueOverflowError } from "../errors";
 
 export class Queue<T> {
-  private items = new Map<number, T>();
+  private readonly items = new Map<number, T>();
   private head: number = 0;
   private tail: number = 0;
 
@@ -16,10 +16,14 @@ export class Queue<T> {
       throw new QueueOverflowError(this.maxSize);
   }
   private resetCounters() {
-    if (this.isEmpty()) {
+    if (this.size === 0) {
       this.head = 0;
       this.tail = 0;
     }
+  }
+
+  get size() {
+    return this.items.size;
   }
 
   enqueue = (item: T) => {
@@ -38,7 +42,8 @@ export class Queue<T> {
     return this.items.get(this.head);
   };
 
-  isEmpty = () => {
-    return this.items.size === 0;
+  clear = () => {
+    this.items.clear();
+    this.resetCounters();
   };
 }
