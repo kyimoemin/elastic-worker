@@ -1,5 +1,6 @@
 import { UniversalWorker } from "#env-adapter";
 import { getReadonlyProxy } from "./readonly-proxy";
+import { UniversalWorkerInterface } from "../types";
 
 export type WorkerPoolOptions = {
   minPoolSize: number;
@@ -18,7 +19,7 @@ export class WorkerPool {
 
   public readonly terminateIdleWorkerDelay: number;
 
-  private workers: Map<UniversalWorker, WorkerInfo> = new Map();
+  private workers: Map<UniversalWorkerInterface, WorkerInfo> = new Map();
 
   /**
    * > [!CAUTION]
@@ -26,7 +27,9 @@ export class WorkerPool {
    *
    * A read-only view of the current worker pool.
    */
-  readonly pool = getReadonlyProxy(this.workers);
+  readonly pool = getReadonlyProxy<Map<UniversalWorkerInterface, WorkerInfo>>(
+    this.workers
+  );
 
   private readonly workerURL: URL;
 
