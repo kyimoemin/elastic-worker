@@ -10,6 +10,7 @@ import type {
   FuncOptions,
   FunctionsRecord,
   ResponsePayload,
+  UniversalWorkerInterface,
   WorkerProxy,
 } from "./types";
 import { Queue } from "./utils/queue";
@@ -17,7 +18,7 @@ import { getReadonlyProxy } from "./utils/readonly-proxy";
 import { WorkerPool } from "./utils/worker-pool";
 
 type MessageListenerParam = {
-  worker: UniversalWorker;
+  worker: UniversalWorkerInterface;
   resolve: (result: any) => any;
   reject: (error: Error) => any;
   timeoutId?: ReturnType<typeof setTimeout>;

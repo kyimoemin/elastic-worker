@@ -80,7 +80,7 @@ export class WorkerPool {
    *
    * @param worker The Worker instance to remove.
    */
-  private removeWorker = (worker: UniversalWorker) => {
+  private removeWorker = (worker: UniversalWorkerInterface) => {
     const workerInfo = this.workers.get(worker);
     if (workerInfo) this.workers.delete(worker);
   };
@@ -90,7 +90,7 @@ export class WorkerPool {
    * or spawns a new one if none are available and the pool has not reached its maximum size.
    * @returns An available Worker instance. `undefined` if the pool has reached its maximum size and no workers are available.
    */
-  getWorker = () => {
+  getWorker = (): UniversalWorkerInterface | undefined => {
     for (const workerInfo of this.workers.values()) {
       if (!workerInfo.busy) {
         workerInfo.busy = true;
@@ -108,7 +108,7 @@ export class WorkerPool {
    * Terminates a specific Worker and removes it from the pool.
    * @param worker The Worker instance to terminate.
    */
-  terminateWorker = (worker: UniversalWorker) => {
+  terminateWorker = (worker: UniversalWorkerInterface) => {
     this.removeWorker(worker);
     worker.terminate();
   };
@@ -117,7 +117,7 @@ export class WorkerPool {
    * Terminates a specific Worker and removes it from the pool when it is idle and existing workers exceed MAX_IDLE_WORKERS .
    * @param worker The Worker instance to terminate.
    */
-  idleWorker = async (worker: UniversalWorker) => {
+  idleWorker = async (worker: UniversalWorkerInterface) => {
     if (!worker) return;
     const workerInfo = this.workers.get(worker);
     if (!workerInfo) return worker.terminate();
@@ -150,13 +150,13 @@ export class WorkerPool {
 }
 
 export class WorkerInfo {
-  public readonly worker: UniversalWorker;
+  public readonly worker: UniversalWorkerInterface;
 
   busy: boolean;
 
   timeoutId: ReturnType<typeof setTimeout> | null = null;
 
-  constructor(worker: UniversalWorker) {
+  constructor(worker: UniversalWorkerInterface) {
     this.worker = worker;
     this.busy = false;
   }
