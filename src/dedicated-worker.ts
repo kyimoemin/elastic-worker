@@ -1,15 +1,9 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { ResponsePayload, FunctionsRecord, WorkerProxy } from "./types";
+import { ResponsePayload, FunctionsRecord, WorkerProxy, Calls } from "./types";
 import { getUUID, UniversalWorker } from "#env-adapter";
 import { QueueOverflowError, WorkerTerminatedError } from "./errors";
 import { getReadonlyProxy } from "./utils/readonly-proxy";
-
-type Calls = {
-  resolve: (result?: any) => void;
-  reject: (error: Error) => void;
-  func: string;
-};
 
 export type DedicatedWorkerOptions = {
   maxQueueSize?: number;

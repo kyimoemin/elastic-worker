@@ -1,5 +1,11 @@
 export type FunctionsRecord = Record<string, any>;
 
+export type Calls = {
+  resolve: (result?: any) => void;
+  reject: (error: Error) => void;
+  func: string;
+};
+
 export type RequestPayload<Params extends unknown[]> = {
   func: string | number;
   args: Params;
@@ -18,9 +24,15 @@ export type ErrorPayload = {
   name: string;
 };
 
+export type FuncOptions = {
+  timeoutMs?: number; // timeout in milliseconds
+  signal?: AbortSignal; // abort signal to cancel the request
+};
+
 export interface WorkerProxy<T extends FunctionsRecord> {
   func<K extends keyof T>(
-    funcName: K
+    funcName: K,
+    options?: FuncOptions
   ): (...args: Parameters<T[K]>) => Promise<ReturnType<T[K]>>;
   terminate(): void;
 }
