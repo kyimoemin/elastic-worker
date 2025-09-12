@@ -85,6 +85,10 @@ describe("ElasticWorker", () => {
   });
 
   it("should expose read-only queue and pool proxies", () => {
+    expect(elasticWorker.queue).toBeDefined();
+    expect(elasticWorker.queue.size).toBeDefined();
+    expect(elasticWorker.pool).toBeDefined();
+    expect(elasticWorker.pool.size).toBeDefined();
     // queue
     expect(() => {
       // @ts-expect-error
