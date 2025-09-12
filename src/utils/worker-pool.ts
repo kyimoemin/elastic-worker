@@ -4,6 +4,7 @@ import { getReadonlyProxy } from "./readonly-proxy";
 export type WorkerPoolOptions = {
   minPoolSize: number;
   maxPoolSize: number;
+  terminateIdleWorkerDelay?: number;
 };
 
 /**
@@ -14,6 +15,8 @@ export type WorkerPoolOptions = {
 export class WorkerPool {
   public readonly minPoolSize: number;
   public readonly maxPoolSize: number;
+
+  public readonly terminateIdleWorkerDelay: number;
 
   private workers: Map<UniversalWorker, WorkerInfo> = new Map();
 
@@ -33,11 +36,20 @@ export class WorkerPool {
    * @param {object} options Configuration options for the worker pool.
    * @param {number} options.minPoolSize Minimum number of workers to keep alive
    * @param {number} options.maxPoolSize Maximum number of non-busy workers to keep alive
+   * @param {number} options.terminateIdleWorkerDelay Delay in milliseconds before terminating an idle worker (default: 500ms)
    */
-  constructor(workerURL: URL, { minPoolSize, maxPoolSize }: WorkerPoolOptions) {
+  constructor(
+    workerURL: URL,
+    {
+      minPoolSize,
+      maxPoolSize,
+      terminateIdleWorkerDelay = 500,
+    }: WorkerPoolOptions
+  ) {
     this.workerURL = workerURL;
     this.minPoolSize = minPoolSize;
     this.maxPoolSize = maxPoolSize;
+    this.terminateIdleWorkerDelay = terminateIdleWorkerDelay;
     this.spawnInitialWorkers();
   }
 
@@ -84,6 +96,7 @@ export class WorkerPool {
     }
     if (this.workers.size >= this.maxPoolSize) return undefined;
     const workerInfo = this.spawnWorker();
+    if (workerInfo.timeoutId) clearTimeout(workerInfo.timeoutId);
     workerInfo.busy = true;
     return workerInfo.worker;
   };
@@ -110,8 +123,11 @@ export class WorkerPool {
     for (const info of this.workers.values()) {
       if (!info.busy) count++;
       if (count >= this.minPoolSize) {
-        this.workers.delete(workerInfo.worker);
-        return workerInfo.worker.terminate();
+        workerInfo.timeoutId = setTimeout(() => {
+          this.workers.delete(workerInfo.worker);
+          workerInfo.worker.terminate();
+        }, this.terminateIdleWorkerDelay);
+        break;
       }
     }
     workerInfo.busy = false;
@@ -134,6 +150,8 @@ export class WorkerInfo {
   public readonly worker: UniversalWorker;
 
   busy: boolean;
+
+  timeoutId: ReturnType<typeof setTimeout> | null = null;
 
   constructor(worker: UniversalWorker) {
     this.worker = worker;

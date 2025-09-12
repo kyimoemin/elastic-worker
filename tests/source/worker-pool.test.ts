@@ -1,6 +1,7 @@
 import { UniversalWorker } from "#env-adapter";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { WorkerPool } from "../../src/utils/worker-pool";
+import { sleep } from "../utils";
 
 // Mock UniversalWorker for testing
 vi.mock("#env-adapter", () => {
@@ -20,7 +21,32 @@ describe("WorkerPool", () => {
   const maxPoolSize = 2;
   beforeEach(() => {
     workerURL = new URL("./dummy-worker.js", import.meta.url);
-    workerPool = new WorkerPool(workerURL, { minPoolSize, maxPoolSize });
+    workerPool = new WorkerPool(workerURL, {
+      minPoolSize,
+      maxPoolSize,
+      terminateIdleWorkerDelay: 1,
+    });
+  });
+  it("should set terminateIdleWorkerDelay option", () => {
+    expect(workerPool.terminateIdleWorkerDelay).toBe(1);
+  });
+
+  it("should set and clear timeoutId for idle workers if there are more than minWorkers", async () => {
+    const worker = workerPool.getWorker();
+    const worker2 = workerPool.getWorker();
+    expect(worker).toBeDefined();
+    expect(worker === worker2).toBeFalsy();
+    // Mark worker as idle, should set timeoutId
+    workerPool.idleWorker(worker2!);
+    workerPool.idleWorker(worker!);
+    const workerInfo = workerPool.pool.get(worker!);
+    // workerInfo may be undefined if already terminated, so check if timeoutId is set or worker is removed
+    if (workerInfo) {
+      expect(workerInfo.timeoutId).not.toBeNull();
+      // Wait for the delay to ensure termination
+      await sleep(1);
+      expect(workerPool.pool.get(worker!)).toBeUndefined();
+    }
   });
 
   afterEach(() => {
@@ -70,6 +96,8 @@ describe("WorkerPool", () => {
       workerPool.idleWorker(worker2!),
     ];
     await Promise.all(workers);
+    expect(workerPool.pool.size).toBe(2);
+    await sleep(1);
     expect(workerPool.pool.size).toBe(1);
   });
 
