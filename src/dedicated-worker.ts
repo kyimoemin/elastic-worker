@@ -97,7 +97,7 @@ export class DedicatedWorker<T extends FunctionsRecord>
         if (this.calls.size >= this.maxQueueSize)
           return reject(new QueueOverflowError(this.maxQueueSize));
         const id = getUUID();
-        this.calls.set(id, { resolve, reject, func: funcName as string });
+        this.calls.set(id, { resolve, reject, func: funcName as string, id });
         this.worker.postMessage({ func: funcName, args, id });
       });
   };

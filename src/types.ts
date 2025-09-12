@@ -4,6 +4,7 @@ export type Calls = {
   resolve: (result?: any) => void;
   reject: (error: Error) => void;
   func: string;
+  id: string;
 };
 
 export type RequestPayload<Params extends unknown[]> = {
