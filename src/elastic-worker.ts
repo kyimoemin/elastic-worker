@@ -208,11 +208,13 @@ export class ElasticWorker<T extends FunctionsRecord>
     }
   };
   /**
+   * > [!CAUTION]
+   * > Keep in mind that this will stop all workers including the workers with ongoing calls.
+   *
    * Terminates the worker and cleans up all pending calls.
    * This method removes all event listeners and clears the calls map.
    * It should be called when the worker is no longer needed to prevent memory leaks.
    *
-   * ! Keep in mind that this will stop all workers including the workers with ongoing calls.
    */
   terminate = () => {
     this.workerPool.terminateAllWorkers();
