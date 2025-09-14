@@ -49,7 +49,7 @@ following places are needed to change
 - [x] max queue size
 - [x] make shrinking pool on idle worker in timeout so it won't happen terminate and start process happen
 
-- [ ] support AbortSignal to function, make the second param object
+- [x] support AbortSignal to function, make the second param object
 
 ## tests
 
