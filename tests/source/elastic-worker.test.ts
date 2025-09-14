@@ -1,10 +1,11 @@
 import { describe, expect, it } from "vitest";
 import { ElasticWorker } from "../../src/elastic-worker";
 import { sleep } from "../utils";
+import { Calculator } from "./type";
 
 describe("ElasticWorker", () => {
   const workerURL = new URL("./dummy-worker.js", import.meta.url);
-  const elasticWorker = new ElasticWorker(workerURL);
+  const elasticWorker = new ElasticWorker<Calculator>(workerURL);
 
   it("should abort a call using AbortSignal and cleanup worker from pool", async () => {
     const controller = new AbortController();

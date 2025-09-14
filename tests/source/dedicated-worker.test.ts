@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
 import { DedicatedWorker } from "../../src/dedicated-worker";
+import { Calculator } from "./type";
 
 describe("DedicatedWorker", () => {
   const workerURL = new URL("./dummy-worker.js", import.meta.url);
-  const dedicatedWorker = new DedicatedWorker(workerURL);
+  const dedicatedWorker = new DedicatedWorker<Calculator>(workerURL);
 
   it("should be defined", () => {
     expect(DedicatedWorker).toBeDefined();
@@ -20,12 +21,11 @@ describe("DedicatedWorker", () => {
   });
 
   it("should call worker and reject on error", async () => {
-    try {
-      const fail = dedicatedWorker.func("fail");
-      await fail(1, 2);
-    } catch (error) {
-      expect(error.message).toBe("Function 'fail' not found in worker.");
-    }
+    // @ts-ignore
+    const fail = dedicatedWorker.func("fail");
+    await expect(fail(1, 2)).rejects.toThrow(
+      "Function 'fail' not found in worker."
+    );
   });
 
   it("should report busy state", async () => {
@@ -56,6 +56,7 @@ describe("DedicatedWorker", () => {
       expect(dedicatedWorker.busy).toBe(false);
       await promise;
     } catch (e) {
+      //@ts-ignore
       expect(e.message).toBe("Worker was terminated");
     }
   });

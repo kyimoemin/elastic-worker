@@ -8,7 +8,7 @@ export type Calls = {
 };
 
 export type RequestPayload<Params extends unknown[]> = {
-  func: string | number;
+  func: any; // function name
   args: Params;
   id: string;
 };
@@ -39,9 +39,9 @@ export interface WorkerProxy<T extends FunctionsRecord> {
 }
 
 export interface UniversalWorkerInterface {
-  postMessage(message: any): void;
+  postMessage(message: RequestPayload<any>): void;
 
-  onmessage(message: any): void;
+  onmessage(message: ResponsePayload<any>): void;
 
   onerror(error: Error): void;
 
