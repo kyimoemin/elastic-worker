@@ -6,6 +6,27 @@ describe("ElasticWorker", () => {
   const workerURL = new URL("./dummy-worker.js", import.meta.url);
   const elasticWorker = new ElasticWorker(workerURL);
 
+  it("should abort a call using AbortSignal and cleanup worker from pool", async () => {
+    const controller = new AbortController();
+    const add = elasticWorker.func("add", { signal: controller.signal });
+    const promise = add(1, 2);
+    controller.abort();
+    await expect(promise).rejects.toThrow("Worker call 'add' has been aborted");
+    // Wait a tick for workerPool cleanup
+    await sleep(10);
+    expect(elasticWorker.pool.size).toBe(0);
+  });
+
+  it("should remove worker from pool after timeout", async () => {
+    const slow = elasticWorker.func("fibonacci", { timeoutMs: 1 });
+    await expect(slow(33)).rejects.toThrowError(
+      "Worker call 'fibonacci' timed out"
+    );
+    // Wait a tick for workerPool cleanup
+    await sleep(10);
+    expect(elasticWorker.pool.size).toBe(0);
+  });
+
   it("should be defined", () => {
     expect(ElasticWorker).toBeDefined();
   });
@@ -32,7 +53,7 @@ describe("ElasticWorker", () => {
     const slow = elasticWorker.func("fibonacci", { timeoutMs: 1 });
 
     await expect(slow(33)).rejects.toThrowError(
-      "Worker call timed out after 1ms"
+      "Worker call 'fibonacci' timed out"
     );
   });
 
@@ -46,14 +67,10 @@ describe("ElasticWorker", () => {
   });
 
   it("should clean up calls and reject all on terminated", async () => {
-    try {
-      const fibonacci = elasticWorker.func("fibonacci");
-      const promise = fibonacci(22);
-      elasticWorker.terminate();
-      await promise;
-    } catch (e) {
-      expect(e.message).toBe("Worker was terminated");
-    }
+    const fibonacci = elasticWorker.func("fibonacci");
+    const promise = fibonacci(22);
+    elasticWorker.terminate();
+    await expect(promise).rejects.toThrow("Worker was terminated");
   });
 
   it("should throw QueueOverflowError when exceeding maxQueueSize", async () => {

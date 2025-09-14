@@ -1,6 +1,7 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 import { getUUID, UniversalWorker } from "#env-adapter";
 import {
+  AbortedError,
   QueueOverflowError,
   TimeoutError,
   WorkerTerminatedError,
@@ -13,6 +14,7 @@ import type {
   UniversalWorkerInterface,
   WorkerProxy,
 } from "./types";
+import { combineSignals } from "./utils/abort-signal";
 import { Queue } from "./utils/queue";
 import { getReadonlyProxy } from "./utils/readonly-proxy";
 import { WorkerPool } from "./utils/worker-pool";
@@ -21,7 +23,6 @@ type MessageListenerParam = {
   worker: UniversalWorkerInterface;
   resolve: (result: any) => any;
   reject: (error: Error) => any;
-  timeoutId?: ReturnType<typeof setTimeout>;
 };
 
 export type ElasticWorkerOptions = {
@@ -32,7 +33,6 @@ export type ElasticWorkerOptions = {
 
 export type CallQueue = Calls & {
   args: any[];
-  timeoutMs: number;
   signal: AbortSignal | undefined;
 };
 
@@ -98,12 +98,7 @@ export class ElasticWorker<T extends FunctionsRecord>
     this.queue = getReadonlyProxy(this.calls);
   }
 
-  private messageListener({
-    worker,
-    resolve,
-    reject,
-    timeoutId,
-  }: MessageListenerParam) {
+  private messageListener({ worker, resolve, reject }: MessageListenerParam) {
     return (data: ResponsePayload<any>) => {
       const { result, error } = data;
       if (error) {
@@ -114,7 +109,6 @@ export class ElasticWorker<T extends FunctionsRecord>
       } else {
         resolve(result);
       }
-      clearTimeout(timeoutId);
       /**
        * todo :
        * check if there is any pending call in the queue,
@@ -148,18 +142,19 @@ export class ElasticWorker<T extends FunctionsRecord>
       funcName: K,
       { timeoutMs = 5000, signal }: FuncOptions = {}
     ) =>
-    (...args: Parameters<T[K]>) =>
-      new Promise<ReturnType<T[K]>>((resolve, reject) => {
+    (...args: Parameters<T[K]>) => {
+      const signals = combineSignals({ signal, timeoutMs });
+      return new Promise<ReturnType<T[K]>>((resolve, reject) => {
         this.executeCall({
           resolve,
           reject,
           func: funcName as string,
           args,
-          timeoutMs,
-          signal,
+          signal: signals,
           id: getUUID(),
         });
       });
+    };
 
   private executeCall = ({
     args,
@@ -168,7 +163,6 @@ export class ElasticWorker<T extends FunctionsRecord>
     reject,
     resolve,
     signal,
-    timeoutMs,
   }: CallQueue) => {
     const worker = this.workerPool.getWorker();
 
@@ -184,25 +178,28 @@ export class ElasticWorker<T extends FunctionsRecord>
           reject,
           func,
           args,
-          timeoutMs,
           signal,
           id,
         });
     } else {
-      let timeoutId: ReturnType<typeof setTimeout> | undefined;
-      if (timeoutMs && timeoutMs !== Infinity && timeoutMs > 0) {
-        timeoutId = setTimeout(() => {
-          reject(new TimeoutError(timeoutMs));
-          this.workerPool.terminateWorker(worker);
-        }, timeoutMs);
-      }
+      const onAbort = (e: AbortSignalEventMap["abort"]) => {
+        const target = e?.target as { reason?: { name: string } };
+        if (target?.reason?.name === "TimeoutError")
+          reject(new TimeoutError(func));
+        else reject(new AbortedError(func));
+        this.workerPool.terminateWorker(worker);
+      };
 
-      worker.onmessage = this.messageListener({
-        worker,
-        resolve,
-        reject,
-        timeoutId,
-      });
+      signal?.addEventListener("abort", onAbort, { once: true });
+
+      worker.onmessage = (message) => {
+        signal?.removeEventListener("abort", onAbort);
+        this.messageListener({
+          worker,
+          resolve,
+          reject,
+        })(message);
+      };
       worker.onerror = (error) => reject(error);
       worker.onexit = () => reject(new WorkerTerminatedError());
       worker.postMessage({ func, args, id });
