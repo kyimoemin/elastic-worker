@@ -107,6 +107,10 @@ export class DedicatedWorker<T extends FunctionsRecord>
         if (this.call === null) this.executeNextCall();
       });
   };
+
+  /**
+   * Indicates whether the worker is currently processing a call.
+   */
   get busy() {
     return !!this.call;
   }
