@@ -32,7 +32,7 @@ describe("DedicatedWorker", () => {
     try {
       const add = dedicatedWorker.func("add");
       const promise = add(1, 2);
-      expect(dedicatedWorker.queue.size).toBe(1);
+      expect(dedicatedWorker.busy).toBe(true);
       await promise;
     } catch (e) {
       console.log(e);
@@ -53,7 +53,7 @@ describe("DedicatedWorker", () => {
       const add = dedicatedWorker.func("add");
       const promise = add(1, 2);
       await dedicatedWorker.terminate();
-      expect(dedicatedWorker.queue.size).toBe(0);
+      expect(dedicatedWorker.busy).toBe(false);
       await promise;
     } catch (e) {
       //@ts-ignore
@@ -79,6 +79,7 @@ describe("DedicatedWorker", () => {
     expect(dedicatedWorker.queue.size).toBe(1);
     await Promise.all([p1, p2]);
     expect(dedicatedWorker.queue.size).toBe(0);
+    expect(dedicatedWorker.busy).toBe(false);
   });
 
   it("should throw QueueOverflowError if maxQueueSize exceeded", async () => {

@@ -107,6 +107,9 @@ export class DedicatedWorker<T extends FunctionsRecord>
         if (this.call === null) this.executeNextCall();
       });
   };
+  get busy() {
+    return !!this.call;
+  }
 
   private executeNextCall = () => {
     if (this.call !== null)
