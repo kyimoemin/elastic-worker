@@ -136,6 +136,8 @@ export class DedicatedWorker<T extends FunctionsRecord>
 
   // worker is terminated, so clear all pending calls
   private clearCalls = () => {
+    this.call?.reject(new WorkerTerminatedError());
+
     for (const { reject } of this.calls.values()) {
       reject(new WorkerTerminatedError());
     }
@@ -149,8 +151,8 @@ export class DedicatedWorker<T extends FunctionsRecord>
    * It should be called when the worker is no longer needed to prevent memory leaks.
    */
   terminate = async () => {
-    await this.worker?.terminate();
     this.clearCalls();
+    await this.worker?.terminate();
     this.worker = null;
   };
   /**

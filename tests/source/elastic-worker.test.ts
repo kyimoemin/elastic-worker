@@ -72,7 +72,7 @@ describe("ElasticWorker", () => {
     const fibonacci = elasticWorker.func("fibonacci");
     const promise = fibonacci(22);
     elasticWorker.terminate();
-    await expect(promise).rejects.toThrow("Worker was terminated");
+    await expect(promise).rejects.toThrow("Worker has been terminated");
   });
 
   it("should throw QueueOverflowError when exceeding maxQueueSize", async () => {

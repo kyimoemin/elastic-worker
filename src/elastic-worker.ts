@@ -110,13 +110,16 @@ export class ElasticWorker<T extends FunctionsRecord>
        * if yes, pick the first one and execute it
        * else mark the worker as idle
        */
-      this.workerPool.idleWorker(worker);
-      if (this.calls.size > 0) {
-        const call = this.calls.dequeue();
-        if (call) this.executeCall(call);
-      }
+      return this.workerPool.idleWorker(worker);
     };
   }
+
+  private executeNextCall = () => {
+    if (this.calls.size > 0) {
+      const call = this.calls.dequeue();
+      if (call) this.executeCall(call);
+    }
+  };
 
   /**
    * Returns a function that calls a method in the worker asynchronously with optional timeout.
@@ -187,15 +190,25 @@ export class ElasticWorker<T extends FunctionsRecord>
 
       signal?.addEventListener("abort", onAbort, { once: true });
 
-      worker.onmessage = (message) => {
+      worker.onmessage = async (message) => {
         signal?.removeEventListener("abort", onAbort);
-        this.messageListener({
+        await this.messageListener({
           worker,
           resolve,
           reject,
         })(message);
+        this.executeNextCall();
       };
-      worker.onerror = (error) => reject(error);
+      worker.onerror = async (error) => {
+        reject(error);
+        signal?.removeEventListener("abort", onAbort);
+        //respawn worker if pool size is below minPoolSize
+        if (this.workerPool.pool.size < this.workerPool.minPoolSize) {
+          const worker = this.workerPool.getWorker();
+          await this.workerPool.idleWorker(worker!);
+          this.executeNextCall();
+        }
+      };
       worker.onexit = () => reject(new WorkerTerminatedError());
       worker.postMessage({ func, args, id });
     }

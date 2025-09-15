@@ -21,7 +21,7 @@ export class AbortedError extends Error {
 
 export class WorkerTerminatedError extends Error {
   constructor() {
-    super(`Worker was terminated`);
+    super(`Worker has been terminated`);
     this.name = "WorkerTerminatedError";
   }
 }

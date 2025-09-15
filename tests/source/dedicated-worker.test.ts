@@ -29,40 +29,28 @@ describe("DedicatedWorker", () => {
   });
 
   it("should report busy state", async () => {
-    try {
-      const add = dedicatedWorker.func("add");
-      const promise = add(1, 2);
-      expect(dedicatedWorker.busy).toBe(true);
-      await promise;
-    } catch (e) {
-      console.log(e);
-    }
+    const add = dedicatedWorker.func("add");
+    const promise = add(1, 2);
+    expect(dedicatedWorker.busy).toBe(true);
+    await promise;
   });
 
   it("should reject on error", async () => {
     const err = dedicatedWorker.func("error");
-    try {
-      await err(1, 3);
-    } catch (e) {
-      expect((e as Error).message).toBe("fail");
-    }
+    await expect(err(1, 3)).rejects.toThrow("fail");
   });
 
   it("should clean up calls and reject all on terminated", async () => {
-    try {
-      const add = dedicatedWorker.func("add");
-      const promise = add(1, 2);
-      await dedicatedWorker.terminate();
-      expect(dedicatedWorker.busy).toBe(false);
-      await promise;
-    } catch (e) {
-      //@ts-ignore
-      expect(e.message).toBe("Worker was terminated");
-    }
+    const add = dedicatedWorker.func("add");
+    const promise = add(1, 2);
+    await expect(dedicatedWorker.terminate()).resolves.toBeUndefined();
+    await expect(promise).rejects.toThrow();
+    expect(dedicatedWorker.busy).toBe(false);
+    dedicatedWorker.respawn();
   });
 
   it("should isTerminated to be true", async () => {
-    //assume worker is terminated from previous test
+    await dedicatedWorker.terminate();
     expect(dedicatedWorker.isTerminated).toBe(true);
   });
 
@@ -83,29 +71,21 @@ describe("DedicatedWorker", () => {
   });
 
   it("should throw QueueOverflowError if maxQueueSize exceeded", async () => {
-    try {
-      const smallQueueWorker = new DedicatedWorker(workerURL, {
-        maxQueueSize: 1,
-      });
-      const add = smallQueueWorker.func("add");
-      const promise = add(1, 2); // fills the queue
-      const sub = smallQueueWorker.func("subtract");
-      await expect(sub(3, 1)).rejects.toThrow("Queue limit of 1 reached");
-      await promise;
-      smallQueueWorker.terminate();
-    } catch (e) {
-      console.log(e);
-    }
+    const smallQueueWorker = new DedicatedWorker<Calculator>(workerURL, {
+      maxQueueSize: 1,
+    });
+    const add = smallQueueWorker.func("add");
+    const promise = [add(1, 2), add(2, 3)]; // fills the queue
+    const sub = smallQueueWorker.func("subtract");
+    await expect(sub(3, 1)).rejects.toThrow("Queue limit of 1 reached");
+    await expect(Promise.all(promise)).resolves.toEqual([3, 5]);
+    smallQueueWorker.terminate();
   });
 
   it("should respawn worker on error and resolve new calls", async () => {
     // cannot simulate crash in test, coz all uncaught exceptions are caught in initWorker function
     const err = dedicatedWorker.func("error");
-    try {
-      await err(1, 2);
-    } catch (e) {
-      // error thrown, worker should respawn
-    }
+    await expect(err(1, 2)).rejects.toThrow("fail");
     // After error, new calls should still work
     const add = dedicatedWorker.func("add");
     const result = await add(2, 3);
