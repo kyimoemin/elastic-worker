@@ -61,11 +61,7 @@ describe("ElasticWorker", () => {
 
   it("should reject on error", async () => {
     const err = elasticWorker.func("error");
-    try {
-      await err(1, 3);
-    } catch (e) {
-      expect((e as Error).message).toBe("fail");
-    }
+    await expect(err(1, 3)).rejects.toThrow("fail");
   });
 
   it("should clean up calls and reject all on terminated", async () => {
