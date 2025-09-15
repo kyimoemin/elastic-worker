@@ -113,10 +113,10 @@ describe("WorkerPool", () => {
     }
   });
 
-  it("should terminate all workers", () => {
+  it("should terminate all workers", async () => {
     const worker1 = workerPool.getWorker();
     const worker2 = workerPool.getWorker();
-    workerPool.terminateAllWorkers();
+    await workerPool.terminateAllWorkers();
     if (worker1) expect(worker1.terminate).toHaveBeenCalled();
     if (worker2) expect(worker2.terminate).toHaveBeenCalled();
     expect(workerPool.pool.size).toBe(0);

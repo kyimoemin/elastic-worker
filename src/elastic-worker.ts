@@ -7,7 +7,7 @@ import {
   WorkerTerminatedError,
 } from "./errors";
 import type {
-  Calls,
+  PendingCall,
   FuncOptions,
   FunctionsRecord,
   ResponsePayload,
@@ -31,11 +31,6 @@ export type ElasticWorkerOptions = {
   maxQueueSize?: number; // maximum number of tasks to queue
 };
 
-export type CallQueue = Calls & {
-  args: any[];
-  signal: AbortSignal | undefined;
-};
-
 /**
  * A generic handler for making asynchronous function calls to a Worker.
  *
@@ -51,7 +46,7 @@ export class ElasticWorker<T extends FunctionsRecord>
   implements WorkerProxy<T>
 {
   private readonly workerPool: WorkerPool;
-  private readonly calls: Queue<CallQueue>;
+  private readonly calls: Queue<PendingCall>;
 
   /**
    * > [!CAUTION]
@@ -59,7 +54,7 @@ export class ElasticWorker<T extends FunctionsRecord>
    *
    * queue of pending calls (read-only)
    */
-  readonly queue: Queue<CallQueue>;
+  readonly queue: Queue<PendingCall>;
 
   readonly maxQueueSize: number;
 
@@ -94,7 +89,7 @@ export class ElasticWorker<T extends FunctionsRecord>
       maxPoolSize: maxWorkers,
     });
     this.maxQueueSize = maxQueueSize;
-    this.calls = new Queue<CallQueue>(maxQueueSize);
+    this.calls = new Queue<PendingCall>(maxQueueSize);
     this.queue = getReadonlyProxy(this.calls);
   }
 
@@ -163,7 +158,7 @@ export class ElasticWorker<T extends FunctionsRecord>
     reject,
     resolve,
     signal,
-  }: CallQueue) => {
+  }: PendingCall) => {
     const worker = this.workerPool.getWorker();
 
     /**
@@ -210,11 +205,14 @@ export class ElasticWorker<T extends FunctionsRecord>
    * > Keep in mind that this will stop all workers including the workers with ongoing calls.
    *
    * Terminates the worker and cleans up all pending calls.
-   * This method removes all event listeners and clears the calls map.
-   * It should be called when the worker is no longer needed to prevent memory leaks.
+   * This method removes all event listeners and clears the calls queue.
    *
    */
   terminate = () => {
+    for (const { reject } of this.calls.values()) {
+      reject(new WorkerTerminatedError());
+    }
+    this.calls.clear();
     this.workerPool.terminateAllWorkers();
   };
 }

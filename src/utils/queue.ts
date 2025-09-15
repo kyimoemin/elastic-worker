@@ -42,6 +42,10 @@ export class Queue<T> {
     return this.items.get(this.head);
   };
 
+  values = (): IterableIterator<T> => {
+    return this.items.values();
+  };
+
   clear = () => {
     this.items.clear();
     this.resetCounters();

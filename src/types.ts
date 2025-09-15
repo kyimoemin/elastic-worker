@@ -1,10 +1,12 @@
 export type FunctionsRecord = Record<string, any>;
 
-export type Calls = {
+export type PendingCall = {
   resolve: (result?: any) => void;
   reject: (error: Error) => void;
   func: string;
   id: string;
+  args: any[];
+  signal?: AbortSignal;
 };
 
 export type RequestPayload<Params extends unknown[]> = {

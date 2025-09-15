@@ -141,10 +141,12 @@ export class WorkerPool {
    *
    * ! be cautious when using this method, as it will stop all ongoing tasks.
    */
-  terminateAllWorkers = () => {
+  terminateAllWorkers = async () => {
+    const promises = [];
     for (const workerInfo of this.workers.values()) {
-      workerInfo.worker.terminate();
+      promises.push(workerInfo.worker.terminate());
     }
+    await Promise.all(promises);
     this.workers.clear();
   };
 }

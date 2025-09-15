@@ -32,7 +32,7 @@ describe("DedicatedWorker", () => {
     try {
       const add = dedicatedWorker.func("add");
       const promise = add(1, 2);
-      expect(dedicatedWorker.busy).toBe(true);
+      expect(dedicatedWorker.queue.size).toBe(1);
       await promise;
     } catch (e) {
       console.log(e);
@@ -53,7 +53,7 @@ describe("DedicatedWorker", () => {
       const add = dedicatedWorker.func("add");
       const promise = add(1, 2);
       await dedicatedWorker.terminate();
-      expect(dedicatedWorker.busy).toBe(false);
+      expect(dedicatedWorker.queue.size).toBe(0);
       await promise;
     } catch (e) {
       //@ts-ignore
@@ -76,7 +76,7 @@ describe("DedicatedWorker", () => {
     const sub = dedicatedWorker.func("subtract");
     const p1 = add(1, 2);
     const p2 = sub(3, 1);
-    expect(dedicatedWorker.queue.size).toBe(2);
+    expect(dedicatedWorker.queue.size).toBe(1);
     await Promise.all([p1, p2]);
     expect(dedicatedWorker.queue.size).toBe(0);
   });

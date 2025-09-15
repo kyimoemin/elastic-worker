@@ -43,6 +43,7 @@ describe("ElasticWorker", () => {
   });
 
   it("should call worker and reject on error", async () => {
+    // @ts-ignore
     const fail = elasticWorker.func("fail");
     const promise = fail(1, 2);
     await expect(promise).rejects.toThrow(

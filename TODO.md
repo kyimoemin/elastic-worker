@@ -29,9 +29,11 @@ following places are needed to change
 ## improvements
 
 - [x] rename worker manager to worker pool
+- [x] add remove message listener in both dedicated/elastic worker
 
 ### dedicated worker
 
+- [x] use queue for calls, it will solve needing to remove the call that make the worker crash
 - [x] expose readonly queue
 - [x] put some flag for terminated worker
 - [x] max queue size
@@ -48,7 +50,6 @@ following places are needed to change
 - [x] expose readonly queue
 - [x] max queue size
 - [x] make shrinking pool on idle worker in timeout so it won't happen terminate and start process happen
-
 - [x] support AbortSignal to function, make the second param object
 
 ## tests

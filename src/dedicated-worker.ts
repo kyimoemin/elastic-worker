@@ -1,9 +1,15 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { ResponsePayload, FunctionsRecord, WorkerProxy, Calls } from "./types";
+import {
+  ResponsePayload,
+  FunctionsRecord,
+  WorkerProxy,
+  PendingCall,
+} from "./types";
 import { getUUID, UniversalWorker } from "#env-adapter";
 import { QueueOverflowError, WorkerTerminatedError } from "./errors";
 import { getReadonlyProxy } from "./utils/readonly-proxy";
+import { Queue } from "./utils/queue";
 
 export type DedicatedWorkerOptions = {
   maxQueueSize?: number;
@@ -23,14 +29,15 @@ export type DedicatedWorkerOptions = {
 export class DedicatedWorker<T extends FunctionsRecord>
   implements WorkerProxy<T>
 {
-  private readonly calls = new Map<string, Calls>();
+  private readonly calls: Queue<PendingCall>;
+  private call: PendingCall | null = null;
   /**
    * > [!CAUTION]
    * > This property is for debugging purposes only. do not modify or use it to manage the queue.
    *
    * queue of pending calls (read-only)
    */
-  readonly queue = getReadonlyProxy(this.calls);
+  readonly queue: Queue<PendingCall>;
   private worker: UniversalWorker | null = null;
 
   readonly maxQueueSize: number;
@@ -43,40 +50,33 @@ export class DedicatedWorker<T extends FunctionsRecord>
   ) {
     this.workerURL = workerURL;
     this.maxQueueSize = maxQueueSize;
+    this.calls = new Queue<PendingCall>(this.maxQueueSize);
+    this.queue = getReadonlyProxy(this.calls);
     this.spawnWorker();
   }
 
   private spawnWorker = () => {
     this.worker = new UniversalWorker(this.workerURL);
     this.worker.onmessage = (data) => {
-      const { id, result, error } = data as ResponsePayload<any>;
-      const call = this.calls.get(id);
-      if (!call) return;
-      if (error) {
-        const e = new Error(error.message);
-        if (error.name) e.name = error.name;
-        if (error.stack) e.stack = error.stack;
-        call.reject(e);
-      } else {
-        call.resolve(result);
-      }
-      this.calls.delete(id);
+      const { result, error } = data as ResponsePayload<any>;
+      // no call here mean worker is terminated, so will not execute next call
+      if (!this.call) return;
+      if (error) this.call.reject(error);
+      else this.call.resolve(result);
+
+      this.call = null;
+      this.executeNextCall();
     };
     this.worker.onerror = (error) => {
-      this.cleanup(error);
+      this.call?.reject(error);
+      this.call = null;
       this.spawnWorker();
+      this.executeNextCall();
     };
     this.worker.onexit = () => {
-      this.cleanup(new WorkerTerminatedError());
+      this.call = null;
+      this.worker = null;
     };
-  };
-
-  private cleanup = (error: Error) => {
-    for (const { reject } of this.calls.values()) {
-      reject(error);
-    }
-    this.calls.clear();
-    this.worker = null;
   };
 
   /**
@@ -97,18 +97,44 @@ export class DedicatedWorker<T extends FunctionsRecord>
         if (this.calls.size >= this.maxQueueSize)
           return reject(new QueueOverflowError(this.maxQueueSize));
         const id = getUUID();
-        this.calls.set(id, { resolve, reject, func: funcName as string, id });
-        this.worker.postMessage({ func: funcName, args, id });
+        this.calls.enqueue({
+          resolve,
+          reject,
+          func: funcName as string,
+          args,
+          id,
+        });
+        if (this.call === null) this.executeNextCall();
       });
   };
 
-  get busy() {
-    return this.calls.size > 0;
-  }
+  private executeNextCall = () => {
+    if (this.call !== null)
+      throw new Error(
+        `Active call in progress func:${this.call.func} id:${this.call.id}`
+      );
+    this.call = this.calls.dequeue() || null;
+    if (!this.call) return;
+    if (!this.worker) return this.clearCalls();
+    this.worker.postMessage({
+      func: this.call.func,
+      args: this.call.args,
+      id: this.call.id,
+    });
+  };
 
   get isTerminated() {
     return this.worker === null;
   }
+
+  // worker is terminated, so clear all pending calls
+  private clearCalls = () => {
+    for (const { reject } of this.calls.values()) {
+      reject(new WorkerTerminatedError());
+    }
+    this.calls.clear();
+    this.call = null;
+  };
 
   /**
    * Terminates the worker and cleans up all pending calls.
@@ -117,7 +143,8 @@ export class DedicatedWorker<T extends FunctionsRecord>
    */
   terminate = async () => {
     await this.worker?.terminate();
-    this.cleanup(new WorkerTerminatedError());
+    this.clearCalls();
+    this.worker = null;
   };
   /**
    * Respawns terminated worker.
