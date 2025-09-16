@@ -43,8 +43,9 @@ describe("DedicatedWorker", () => {
   it("should clean up calls and reject all on terminated", async () => {
     const add = dedicatedWorker.func("add");
     const promise = add(1, 2);
-    await expect(dedicatedWorker.terminate()).resolves.toBeUndefined();
+    const termination = dedicatedWorker.terminate();
     await expect(promise).rejects.toThrow("Worker has been terminated");
+    await termination;
     expect(dedicatedWorker.busy).toBe(false);
     dedicatedWorker.respawn();
   });
