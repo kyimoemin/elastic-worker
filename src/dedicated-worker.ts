@@ -44,6 +44,15 @@ export class DedicatedWorker<T extends FunctionsRecord>
 
   private readonly workerURL: URL;
 
+  /**
+   *
+   * @param workerURL URL of the worker script.
+   * @param {object} options Options for configuring the DedicatedWorker instance.
+   * @param {number} options.maxQueueSize Maximum number of pending calls allowed in the queue. Default is Infinity.
+   *
+   * @example
+   * const workerURL = new URL('./worker.js', import.meta.url);
+   */
   constructor(
     workerURL: URL,
     { maxQueueSize = Infinity }: DedicatedWorkerOptions = {}
@@ -67,11 +76,14 @@ export class DedicatedWorker<T extends FunctionsRecord>
       this.call = null;
       this.executeNextCall();
     };
-    this.worker.onerror = (error) => {
-      this.call?.reject(error);
-      this.call = null;
-      this.spawnWorker();
-      this.executeNextCall();
+    this.worker.onerror = async (error) => {
+      /**
+       * worker crashed, reject all pending calls and set worker to null
+       * worker has to be terminated to prevent state in worker become inconsistent
+       */
+      this.clearCalls(error);
+      await this.worker?.terminate();
+      this.worker = null;
     };
     this.worker.onexit = () => {
       this.call = null;
@@ -130,16 +142,19 @@ export class DedicatedWorker<T extends FunctionsRecord>
     });
   };
 
+  /**
+   * Indicates whether the worker has been terminated. Worker can be respawned using the `respawn` method.
+   */
   get isTerminated() {
     return this.worker === null;
   }
 
   // worker is terminated, so clear all pending calls
-  private clearCalls = () => {
-    this.call?.reject(new WorkerTerminatedError());
+  private clearCalls = (error?: Error) => {
+    this.call?.reject(error ?? new WorkerTerminatedError());
 
     for (const { reject } of this.calls.values()) {
-      reject(new WorkerTerminatedError());
+      reject(error ?? new WorkerTerminatedError());
     }
     this.calls.clear();
     this.call = null;
@@ -147,8 +162,8 @@ export class DedicatedWorker<T extends FunctionsRecord>
 
   /**
    * Terminates the worker and cleans up all pending calls.
-   * This method removes all event listeners and clears the calls map.
-   * It should be called when the worker is no longer needed to prevent memory leaks.
+   * This method removes all event listeners and clears the calls queue.
+   * It should be called when the worker is no longer needed.
    */
   terminate = async () => {
     this.clearCalls();
