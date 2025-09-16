@@ -44,7 +44,7 @@ describe("DedicatedWorker", () => {
     const add = dedicatedWorker.func("add");
     const promise = add(1, 2);
     await expect(dedicatedWorker.terminate()).resolves.toBeUndefined();
-    await expect(promise).rejects.toThrow();
+    await expect(promise).rejects.toThrow("Worker has been terminated");
     expect(dedicatedWorker.busy).toBe(false);
     dedicatedWorker.respawn();
   });
