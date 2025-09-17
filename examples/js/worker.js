@@ -15,6 +15,16 @@ const add = (a, b) => a + b;
  */
 const subtract = (a, b) => a - b;
 
-const calculator = { add, subtract };
+/**
+ *
+ * @param {number} n
+ * @returns {number}
+ */
+const fibonacci = (n) => {
+  if (n <= 1) return n;
+  return fibonacci(n - 1) + fibonacci(n - 2);
+};
+
+const calculator = { add, subtract, fibonacci };
 
 initWorker(calculator);
