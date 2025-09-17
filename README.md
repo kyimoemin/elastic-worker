@@ -8,10 +8,11 @@
 
 - [Overview](#overview)
 - [Installation](#installation)
-- [Usage](#usage)
-- [DedicatedWorker](#dedicatedworker)
+- [Quick Start](#quick-start)
+- [initWorker](#initworker)
 - [ElasticWorker](#elasticworker)
-- [Configuration](#configuration)
+- [DedicatedWorker](#dedicatedworker)
+- [Errors](#errors)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -20,13 +21,7 @@
 `async-multi-worker` provides a simple abstraction over **Web Workers** (browser) and **Worker Threads** (Node.js).
 It lets you offload CPU‑intensive or blocking tasks to workers **without manually handling worker setup or lifecycle**.
 
-This package exports two worker classes: [DedicatedWorker](#dedicatedworker) and [ElasticWorker](#elasticworker).
-Each has its pros and cons:
-
-| Worker          | Pros                                                | Cons                                                         |
-| --------------- | --------------------------------------------------- | ------------------------------------------------------------ |
-| DedicatedWorker | Can maintain persistent state across calls          | Queues calls; only one runs at a time (sequential execution) |
-| ElasticWorker   | Non-blocking; can handle multiple tasks in parallel | Cannot maintain state between calls (stateless)              |
+This package exports two worker classes: [DedicatedWorker](#dedicatedworker) and [ElasticWorker](#elasticworker). and [initWorker](#initworker) function
 
 ## Installation
 
@@ -34,7 +29,7 @@ Each has its pros and cons:
 npm i async-multi-worker
 ```
 
-## Usage
+## Quick Start
 
 Create a separate file for the worker context.
 
@@ -44,9 +39,9 @@ src/
   main.ts
 ```
 
-### worker.ts
+Define your functions and pass them to `initWorker` in your `worker.ts`.
 
-Define your functions and pass them to `initWorker`.
+##### worker.ts
 
 ```ts
 import { initWorker } from "async-multi-worker";
@@ -58,27 +53,20 @@ const calc = { add, sub };
 
 export type Calculator = typeof calc;
 
+// load worker functions
 initWorker(calc);
 ```
 
-### main.ts
+Use `ElasticWorker` in your `main.ts`
 
-Use `DedicatedWorker` or `ElasticWorker` depending on your needs.
+##### main.ts
 
 ```ts
 import { ElasticWorker } from "async-multi-worker";
 import type { Calculator } from "./worker.ts";
 
 const workerUrl = new URL("./worker.ts", import.meta.url);
-/**
- * or you write as like this for CJS setup.
- * import path from "path";
- * import { pathToFileURL } from "url";
- *
- * const workerUrl = pathToFileURL(path.resolve("./worker.js"));
- *
- */
-const elasticWorker = new ElasticWorker(workerUrl);
+const elasticWorker = new ElasticWorker<Calculator>(workerUrl);
 
 const addition = elasticWorker.func("add");
 const subtract = elasticWorker.func("sub");
@@ -89,8 +77,103 @@ const subResult = await subtract(5, 3); // runs `sub` in a worker thread
 
 **Flow (at a glance):**
 
+```diagram
+main.ts → ElasticWorker/DedicatedWorker → worker.ts (your functions)
 ```
-main.ts → DedicatedWorker/ElasticWorker → worker.ts (your functions)
+
+---
+
+## initWorker
+
+This function is used to load worker functions of your [worker](#workerts) file.
+
+> [!CAUTION]
+> Functions and variables of [worker](#workerts) file where `initWorker` is called cannot be exported and used in main thread.
+
+```js
+initWorker(funcWrapperObj);
+```
+
+---
+
+## ElasticWorker
+
+A `ElasticWorker` can **spawn multiple workers on demand**, making it ideal for parallel tasks.
+
+### Constructor
+
+ElasticWorker constructor accept two parameters, `url` and `options`. It can accept the object type of a worker that is set in `initWorker` of a worker file. see [Quick Start](#quick-start) example.
+
+```js
+new ElasticWorker(url, options);
+```
+
+#### Parameters
+
+##### `url`
+
+An [URL](https://developer.mozilla.org/en-US/docs/Web/API/URL) object of worker file.
+
+```js
+const workerUrl = new URL("./worker.ts", import.meta.url);
+const ew = new ElasticWorker(workerUrl, {
+  minWorkers: 2,
+  maxWorkers: 4,
+  maxQueueSize: 1000,
+  terminateIdleDelay: 1000,
+});
+```
+
+or you can write this way if you are using CJS module.
+
+```js
+import path from "path";
+import { pathToFileURL } from "url";
+
+const workerUrl = pathToFileURL(path.resolve("./worker.js"));
+const elasticWorker = new ElasticWorker(workerUrl);
+```
+
+#### `options`
+
+An object containing option properties that can be set when creating ElasticWorker instance. Available properties are follows:
+
+- `minWorkers` (default `1`) — Minimum number of idle workers to keep alive. It is recommended to set at least 1 minimum worker to prevent any hot start when worker function is called.
+
+- `maxWorkers` (default `4`) — Maximum number of busy worker allowed. **ElasticWorker** spawn workers on demand so to prevent from spawning unlimited worker and taking too much resources we should set some limit for the maximum spawnable workers.
+- `maxQueueSize` (default `Infinity`) — Maximum number of tasks allow in the call queue. If all available workers are busy and already at the `maxWorker`limit, the upcoming calls will be wait in a call queue, you can set a maximum limit to that call queue.
+- `terminateIdleDelay` (default `500`ms) — Time to wait in milliseconds before terminating an idle worker. If number idle workers exceed the limit of `minWorker` will be terminated after a delay of `terminatedIdleDelay`.
+
+### Properties
+
+- `pool` — A pool of workers. _This property is exposed for debugging purpose only do not use it to manage worker pool._
+- `queue` — A list of all pending calls waiting in a call queue to be process by available workers. _This property is exposed for debugging purpose only do not use it to manage call queue._
+
+### Methods
+
+#### `func`
+
+A function that returns a callable function of a worker. It accept 2 parameters.
+
+```js
+const controller = new AbortController();
+
+elasticWorker.func("add", { timeoutMs: 10000, signal: controller.signal });
+```
+
+##### Function Parameters
+
+- `funcName` — function name in a worker that will be called from main thread.
+- `options` — object options for that function call
+  - `timeoutMs` (default `5000`ms) — timeout of a function in milliseconds
+  - `signal` (optional) — [AbortSignal](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) for the function
+
+#### `terminate`
+
+Terminate all worker in the worker poll and clear the pending call queue. _Only use this function when you are sure that you no longer needed that worker and doesn't care about pending calls anymore_
+
+```js
+await elasticWorker.terminate();
 ```
 
 ---
@@ -98,7 +181,7 @@ main.ts → DedicatedWorker/ElasticWorker → worker.ts (your functions)
 ## DedicatedWorker
 
 A `DedicatedWorker` runs in a **single worker thread**.
-It can maintain **persistent state**, but tasks are executed sequentially (queued).
+It can maintain **state** since it is using single worker thead, but the state can be lost if that worker is crashed or terminated. I recommend to use **ElasticWorker** with managing state in main thread.
 
 ### API
 
@@ -175,73 +258,9 @@ console.log(await lastResult()); // 30
 
 ---
 
-## ElasticWorker
-
-A `ElasticWorker` can **spawn multiple workers on demand**, making it ideal for parallel tasks.
-Workers are terminated automatically when idle (beyond your configured idle limit).
-
-### Features
-
-- Non-blocking: spawns workers as needed.
-- Auto-terminates extra idle workers (configurable).
-- Per-call timeout support (default `5000ms`, use `Infinity` to disable).
-
-### API
-
-| Property    | Type     | Params                  | Return   | Description                                                                |
-| ----------- | -------- | ----------------------- | -------- | -------------------------------------------------------------------------- |
-| `func`      | function | `funcName`, `timeoutMs` | function | Returns a callable function by name, with optional timeout in milliseconds |
-| `terminate` | function | –                       | –        | Terminates all active worker threads                                       |
-
-### Example
-
-This example focuses on the additional features of the ElasticWorker class.
-Let's use the same code for `worker.ts` as in [Usage](#usage):
-
-**main.ts**
-
-```ts
-import { ElasticWorker, TimeoutError } from "async-multi-worker";
-
-const workerUrl = new URL("./worker.ts", import.meta.url);
-const elasticWorker = new ElasticWorker(workerUrl, 2); // keep up to 2 idle workers
-
-const add = elasticWorker.func("add", 2000); // 2000ms timeout
-
-try {
-  const result = await add(1, 2);
-  console.log("Result:", result);
-} catch (error) {
-  if (error instanceof TimeoutError) {
-    console.error("Function execution timed out", error);
-  } else {
-    console.error("Unexpected error", error);
-  }
-}
-```
-
 ---
 
-## Configuration
-
-`ElasticWorker` constructor:
-
-```ts
-new ElasticWorker(workerUrl: URL, maxIdleWorkers?: number)
-```
-
-| Option           | Default | Description                                  |
-| ---------------- | ------- | -------------------------------------------- |
-| `maxIdleWorkers` | `5`     | Max number of non-busy workers to keep alive |
-
-Per-call timeout (optional) is set when obtaining a function:
-
-```ts
-const fn = elasticWorker.func(
-  "taskName",
-  timeoutMs /* default 5000; use Infinity to disable */
-);
-```
+## Errors
 
 ---
 
