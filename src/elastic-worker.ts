@@ -57,7 +57,7 @@ export class ElasticWorker<T extends FunctionsRecord>
    */
   readonly queue: Queue<PendingCall>;
 
-  readonly maxQueueSize: number;
+  private readonly maxQueueSize: number;
 
   /**
    * > [!CAUTION]

@@ -6,7 +6,6 @@ import { Calculator } from "./type";
 describe("ElasticWorker", () => {
   const workerURL = new URL("./dummy-worker.js", import.meta.url);
   const elasticWorker = new ElasticWorker<Calculator>(workerURL);
-
   it("should abort a call using AbortSignal and cleanup worker from pool", async () => {
     const controller = new AbortController();
     const add = elasticWorker.func("add", { signal: controller.signal });
