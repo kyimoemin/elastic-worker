@@ -37,8 +37,8 @@ export class WorkerPool {
    * Creates a WorkerPool instance.
    * @param workerURL URL of the worker script.
    * @param {object} options Configuration options for the worker pool.
-   * @param {number} options.minPoolSize Minimum number of workers to keep alive
-   * @param {number} options.maxPoolSize Maximum number of non-busy workers to keep alive
+   * @param {number} options.minPoolSize Minimum number of idle workers to keep alive
+   * @param {number} options.maxPoolSize Maximum number of busy workers allowed.
    * @param {number} options.terminateIdleDelay Delay in milliseconds before terminating an idle worker (default: 500ms)
    */
   constructor(

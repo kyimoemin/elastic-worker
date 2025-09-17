@@ -73,8 +73,8 @@ export class ElasticWorker<T extends FunctionsRecord>
    *
    * @param workerURL URL of the worker script
    * @param {object} options Configuration options for the worker pool
-   * @param {number} options.minWorkers Minimum number of workers to keep alive (default: 1)
-   * @param {number} options.maxWorkers Maximum number of non-busy workers to keep alive (default: 4)
+   * @param {number} options.minWorkers Minimum number of idle workers to keep alive (default: 1)
+   * @param {number} options.maxWorkers Maximum number of busy workers allowed. (default: 4)
    * @param {number} options.maxQueueSize Maximum number of tasks to queue (default: Infinity)
    * @param {number} options.terminateIdleDelay Delay in milliseconds before terminating an idle worker (default: 500ms)
    */
