@@ -23,9 +23,9 @@ describe("TimeoutError", () => {
     expect(TimeoutError).toBeDefined();
   });
   it("should throw TimeoutError correctly", () => {
-    const timeoutError = new TimeoutError(5000);
+    const timeoutError = new TimeoutError("testFunction");
     expect(timeoutError).toBeInstanceOf(Error);
-    expect(timeoutError.message).toBe("Worker call timed out after 5000ms");
+    expect(timeoutError.message).toBe("Worker call 'testFunction' timed out");
     expect(timeoutError.name).toBe("TimeoutError");
   });
 });

@@ -4,11 +4,13 @@
  */
 export function getReadonlyProxy<T extends Record<string, any>>(obj: T) {
   return new Proxy(obj, {
-    get(target, prop, receiver) {
+    get(target, prop) {
       if (["set", "delete", "clear"].includes(String(prop))) {
         throw new Error("This Map is read-only (proxy blocked).");
       }
-      return Reflect.get(target, prop, target);
+
+      const value = Reflect.get(target, prop, target);
+      return typeof value === "function" ? (value as any).bind(target) : value;
     },
     set() {
       throw new Error("This Map is read-only (cannot set properties).");

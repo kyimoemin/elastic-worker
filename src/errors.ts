@@ -1,6 +1,6 @@
 export class TimeoutError extends Error {
-  constructor(timeoutMs: number) {
-    super(`Worker call timed out after ${timeoutMs}ms`);
+  constructor(func: string) {
+    super(`Worker call '${func}' timed out`);
     this.name = "TimeoutError";
   }
 }
@@ -13,15 +13,15 @@ export class QueueOverflowError extends Error {
 }
 
 export class AbortedError extends Error {
-  constructor() {
-    super(`Worker call was aborted`);
+  constructor(funcName: string) {
+    super(`Worker call '${funcName}' has been aborted`);
     this.name = "AbortedError";
   }
 }
 
 export class WorkerTerminatedError extends Error {
   constructor() {
-    super(`Worker was terminated`);
+    super(`Worker has been terminated`);
     this.name = "WorkerTerminatedError";
   }
 }

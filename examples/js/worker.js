@@ -1,4 +1,5 @@
 import { initWorker } from "async-multi-worker";
+import { fibonacci } from "./fibonacci.js";
 
 /**
  *
@@ -15,6 +16,6 @@ const add = (a, b) => a + b;
  */
 const subtract = (a, b) => a - b;
 
-const calculator = { add, subtract };
+const calculator = { add, subtract, fibonacci };
 
 initWorker(calculator);
