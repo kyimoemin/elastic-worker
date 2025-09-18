@@ -16,8 +16,7 @@ import type {
 } from "./types";
 import { combineSignals } from "./utils/abort-signal";
 import { Queue } from "./utils/queue";
-import { getReadonlyProxy } from "./utils/readonly-proxy";
-import { WorkerPool } from "./utils/worker-pool";
+import { WorkerPool, WorkerInfo } from "./utils/worker-pool";
 
 type MessageListenerParam = {
   worker: UniversalWorkerInterface;
@@ -49,24 +48,14 @@ export class ElasticWorker<T extends FunctionsRecord>
   private readonly workerPool: WorkerPool;
   private readonly calls: Queue<PendingCall>;
 
-  /**
-   * > [!CAUTION]
-   * > This property is for debugging purposes only. do not modify or use it to manage the queue.
-   *
-   * queue of pending calls (read-only)
-   */
-  readonly queue: Queue<PendingCall>;
+  get queue() {
+    return this.calls as Pick<Queue<PendingCall>, "size">;
+  }
 
   private readonly maxQueueSize: number;
 
-  /**
-   * > [!CAUTION]
-   * > This property is for debugging purposes only. do not modify or use it to manage the pool.
-   *
-   * A read-only view of the current worker pool.
-   */
   get pool() {
-    return this.workerPool.pool;
+    return this.workerPool.pool as Pick<Map<UniversalWorkerInterface, WorkerInfo>, "size">;
   }
 
   /**
@@ -94,7 +83,6 @@ export class ElasticWorker<T extends FunctionsRecord>
     });
     this.maxQueueSize = maxQueueSize;
     this.calls = new Queue<PendingCall>(maxQueueSize);
-    this.queue = getReadonlyProxy(this.calls);
   }
 
   private messageListener({ worker, resolve, reject }: MessageListenerParam) {

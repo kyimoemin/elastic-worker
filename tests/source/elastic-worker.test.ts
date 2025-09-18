@@ -101,26 +101,4 @@ describe("ElasticWorker", () => {
     poolWorker.terminate();
   });
 
-  it("should expose read-only queue and pool proxies", () => {
-    expect(elasticWorker.queue).toBeDefined();
-    expect(elasticWorker.queue.size).toBeDefined();
-    expect(elasticWorker.pool).toBeDefined();
-    expect(elasticWorker.pool.size).toBeDefined();
-    // queue
-    expect(() => {
-      // @ts-expect-error
-      elasticWorker.queue.set(0, {});
-    }).toThrow("This Map is read-only (proxy blocked).");
-    expect(() => {
-      elasticWorker.queue.clear();
-    }).toThrow("This Map is read-only (proxy blocked).");
-    // pool
-    expect(() => {
-      // @ts-expect-error
-      elasticWorker.pool.set({}, {});
-    }).toThrow("This Map is read-only (proxy blocked).");
-    expect(() => {
-      elasticWorker.pool.clear();
-    }).toThrow("This Map is read-only (proxy blocked).");
-  });
 });

@@ -8,7 +8,6 @@ import {
 } from "./types";
 import { getUUID, UniversalWorker } from "#env-adapter";
 import { QueueOverflowError, WorkerTerminatedError } from "./errors";
-import { getReadonlyProxy } from "./utils/readonly-proxy";
 import { Queue } from "./utils/queue";
 
 export type DedicatedWorkerOptions = {
@@ -34,13 +33,11 @@ export class DedicatedWorker<T extends FunctionsRecord>
 {
   private readonly calls: Queue<PendingCall>;
   private call: PendingCall | null = null;
-  /**
-   * > [!CAUTION]
-   * > This property is for debugging purposes only. do not modify or use it to manage the queue.
-   *
-   * queue of pending calls (read-only)
-   */
-  readonly queue: Queue<PendingCall>;
+
+  get queue() {
+    return this.calls as Pick<Queue<PendingCall>, "size">;
+  }
+
   private worker: UniversalWorker | null = null;
 
   private readonly maxQueueSize: number;
@@ -63,7 +60,6 @@ export class DedicatedWorker<T extends FunctionsRecord>
     this.workerURL = workerURL;
     this.maxQueueSize = maxQueueSize;
     this.calls = new Queue<PendingCall>(this.maxQueueSize);
-    this.queue = getReadonlyProxy(this.calls);
     this.spawnWorker();
   }
 

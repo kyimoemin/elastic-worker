@@ -1,5 +1,4 @@
 import { UniversalWorker } from "#env-adapter";
-import { getReadonlyProxy } from "./readonly-proxy";
 import { UniversalWorkerInterface } from "../types";
 
 export type WorkerPoolOptions = {
@@ -21,15 +20,12 @@ export class WorkerPool {
 
   private workers: Map<UniversalWorkerInterface, WorkerInfo> = new Map();
 
-  /**
-   * > [!CAUTION]
-   * > This property is for debugging purposes only. do not modify or use it to manage the pool.
-   *
-   * A read-only view of the current worker pool.
-   */
-  readonly pool = getReadonlyProxy<Map<UniversalWorkerInterface, WorkerInfo>>(
-    this.workers
-  );
+  get pool() {
+    return this.workers as Pick<
+      Map<UniversalWorkerInterface, WorkerInfo>,
+      "size" | "get"
+    >;
+  }
 
   private readonly workerURL: URL;
 
