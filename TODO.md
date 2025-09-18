@@ -28,7 +28,6 @@ following places are needed to change
 
 ## improvements
 
-- [ ] https://chatgpt.com/share/68c6b06b-7df4-8001-af75-1421fef80bec
 - [x] update documents
 - [x] rename worker manager to worker pool
 - [x] add remove message listener in both dedicated/elastic worker
@@ -58,6 +57,5 @@ following places are needed to change
 
 ## next version
 
-- shared array buffer (SharedArrayBuffer can be passed directly without any extra implementations)
+- [ ] shared array buffer (SharedArrayBuffer can be passed directly without any extra implementations)
 - [ ] check postMessage transfer option (need to pass transferList, the second parameter of worker.postMessage)
-- https://chatgpt.com/share/68ca5ca9-5a98-8001-ad41-f4380124fd48
