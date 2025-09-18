@@ -1,5 +1,5 @@
 import { Worker } from "worker_threads";
-import { UniversalWorkerInterface } from "../types";
+import { RequestPayload, UniversalWorkerInterface } from "../types";
 
 export class UniversalWorker implements UniversalWorkerInterface {
   private worker: Worker;
@@ -8,23 +8,28 @@ export class UniversalWorker implements UniversalWorkerInterface {
     this.worker = new Worker(workerURL);
   }
 
-  postMessage(message: any): void {
+  postMessage(message: RequestPayload<any>): void {
     this.worker.postMessage(message);
   }
 
-  set onmessage(handler: (message: any) => void) {
+  set onmessage(handler: UniversalWorkerInterface["onmessage"]) {
+    this.worker.removeAllListeners("message");
+    this.worker.removeAllListeners("messageerror");
     this.worker.on("message", handler);
+    this.worker.on("messageerror", (error) => handler({ error, id: "" }));
   }
 
-  set onerror(handler: (error: Error) => void) {
+  set onerror(handler: UniversalWorkerInterface["onerror"]) {
+    this.worker.removeAllListeners("error");
     this.worker.on("error", handler);
   }
 
-  set onexit(handler: (exitCode: number) => void) {
+  set onexit(handler: UniversalWorkerInterface["onexit"]) {
+    this.worker.removeAllListeners("exit");
     this.worker.on("exit", handler);
   }
 
-  terminate(): void {
-    this.worker.terminate();
+  terminate(): Promise<number> {
+    return this.worker.terminate();
   }
 }

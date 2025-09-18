@@ -1,4 +1,4 @@
-import { UniversalWorkerInterface } from "../types";
+import { RequestPayload, UniversalWorkerInterface } from "../types";
 
 export class UniversalWorker implements UniversalWorkerInterface {
   private worker: Worker;
@@ -6,23 +6,25 @@ export class UniversalWorker implements UniversalWorkerInterface {
     this.worker = new window.Worker(workerURL, { type: "module" });
   }
 
-  postMessage(message: any): void {
+  postMessage(message: RequestPayload<any>): void {
     this.worker.postMessage(message);
   }
 
-  set onmessage(handler: (message: any) => void) {
+  set onmessage(handler: UniversalWorkerInterface["onmessage"]) {
     this.worker.onmessage = (event) => handler(event.data);
+    this.worker.onmessageerror = (event) =>
+      handler({ error: event.data as Error, id: event.data?.id });
   }
 
-  set onerror(handler: (error: Error) => void) {
+  set onerror(handler: UniversalWorkerInterface["onerror"]) {
     this.worker.onerror = (event) => handler(event.error);
   }
 
-  set onexit(handler: (exitCode: number) => void) {
+  set onexit(handler: UniversalWorkerInterface["onexit"]) {
     // Browser workers do not have an exit event like Node.js workers.
   }
 
-  terminate(): void {
-    this.worker.terminate();
+  async terminate(): Promise<void> {
+    return this.worker.terminate();
   }
 }
