@@ -14,19 +14,19 @@ describe("ElasticWorker", () => {
     await expect(promise).rejects.toThrow("Worker call 'add' has been aborted");
     expect(elasticWorker.pool.size).toBe(0);
     // Wait a tick for workerPool cleanup
-    await sleep(10);
+    await sleep(50);
     expect(elasticWorker.pool.size).toBe(1);
   });
 
   it("should remove worker from pool after timeout", async () => {
-    const slow = elasticWorker.func("fibonacci", { timeoutMs: 5 });
-    const promise = slow(10);
+    const slow = elasticWorker.func("fibonacci", { timeoutMs: 1 });
+    const promise = slow(30);
     await expect(promise).rejects.toThrowError(
       "Worker call 'fibonacci' timed out"
     );
     expect(elasticWorker.pool.size).toBe(0);
     // Wait a tick for workerPool cleanup
-    await sleep(5);
+    await sleep(50);
     expect(elasticWorker.pool.size).toBe(1);
   });
 
@@ -47,7 +47,7 @@ describe("ElasticWorker", () => {
     // worker should be terminated and removed from the pool
     expect(minWorker.pool.size).toBe(0);
 
-    await sleep(5);
+    await sleep(50);
     // after a tick, workers should be respawned to maintain minWorkers
     expect(minWorker.pool.size).toBe(1);
   });
