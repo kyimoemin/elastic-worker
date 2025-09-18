@@ -104,9 +104,17 @@ export class WorkerPool {
    * Terminates a specific Worker and removes it from the pool.
    * @param worker The Worker instance to terminate.
    */
-  terminateWorker = (worker: UniversalWorkerInterface) => {
+  terminateWorker = async (worker: UniversalWorkerInterface) => {
     this.removeWorker(worker);
-    worker.terminate();
+    await worker.terminate();
+    this.fillMinPool();
+  };
+
+  fillMinPool = () => {
+    const toSpawn = this.minPoolSize - this.workers.size;
+    for (let i = 0; i < toSpawn; i++) {
+      this.spawnWorker();
+    }
   };
 
   /**
