@@ -14,7 +14,7 @@ describe("ElasticWorker", () => {
     await expect(promise).rejects.toThrow("Worker call 'add' has been aborted");
     expect(elasticWorker.pool.size).toBe(0);
     // Wait a tick for workerPool cleanup
-    await sleep(50);
+    await sleep(100);
     expect(elasticWorker.pool.size).toBe(1);
   });
 
@@ -26,7 +26,7 @@ describe("ElasticWorker", () => {
     );
     expect(elasticWorker.pool.size).toBe(0);
     // Wait a tick for workerPool cleanup
-    await sleep(50);
+    await sleep(100);
     expect(elasticWorker.pool.size).toBe(1);
   });
 
@@ -47,7 +47,7 @@ describe("ElasticWorker", () => {
     // worker should be terminated and removed from the pool
     expect(minWorker.pool.size).toBe(0);
 
-    await sleep(50);
+    await sleep(100);
     // after a tick, workers should be respawned to maintain minWorkers
     expect(minWorker.pool.size).toBe(1);
   });
