@@ -13,6 +13,7 @@
 - [ElasticWorker](#elasticworker)
 - [DedicatedWorker](#dedicatedworker)
 - [Errors](#errors)
+- [Performance](#performance)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -274,6 +275,10 @@ console.log(await lastResult()); // 30
 ---
 
 ## Errors
+
+---
+
+## Performance
 
 ---
 
