@@ -110,7 +110,7 @@ export class WorkerPool {
     this.fillMinPool();
   };
 
-  fillMinPool = () => {
+  private fillMinPool = () => {
     const toSpawn = this.minPoolSize - this.workers.size;
     for (let i = 0; i < toSpawn; i++) {
       this.spawnWorker();
