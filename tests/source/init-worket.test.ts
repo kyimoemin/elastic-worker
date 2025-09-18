@@ -35,7 +35,7 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-let functions;
+let functions: Record<string, (...args: any[]) => any>;
 
 async function importInitWorker() {
   return import("../../src/init-worker");
