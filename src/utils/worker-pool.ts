@@ -89,14 +89,17 @@ export class WorkerPool {
   getWorker = (): UniversalWorkerInterface | undefined => {
     for (const workerInfo of this.workers.values()) {
       if (!workerInfo.busy) {
-        workerInfo.busy = true;
-        return workerInfo.worker;
+        return this.activateWorker(workerInfo);
       }
     }
     if (this.workers.size >= this.maxPoolSize) return undefined;
     const workerInfo = this.spawnWorker();
-    if (workerInfo.timeoutId) clearTimeout(workerInfo.timeoutId);
+    return this.activateWorker(workerInfo);
+  };
+
+  private activateWorker = (workerInfo: WorkerInfo) => {
     workerInfo.busy = true;
+    if (workerInfo.timeoutId) clearTimeout(workerInfo.timeoutId);
     return workerInfo.worker;
   };
 

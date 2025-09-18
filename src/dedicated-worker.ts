@@ -43,7 +43,7 @@ export class DedicatedWorker<T extends FunctionsRecord>
   readonly queue: Queue<PendingCall>;
   private worker: UniversalWorker | null = null;
 
-  readonly maxQueueSize: number;
+  private readonly maxQueueSize: number;
 
   private readonly workerURL: URL;
 

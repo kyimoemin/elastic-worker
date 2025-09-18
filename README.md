@@ -13,7 +13,7 @@
 - [ElasticWorker](#elasticworker)
 - [DedicatedWorker](#dedicatedworker)
 - [Errors](#errors)
-- [Performance](#performance)
+- [Benchmark](#benchmark)
 - [Contributing](#contributing)
 - [License](#license)
 
@@ -143,17 +143,17 @@ const elasticWorker = new ElasticWorker(workerUrl);
 
 ### Options
 
-- **`minWorkers`** (default: `1`) — Minimum idle workers kept alive. Prevents cold starts stays ready for upcoming calls.
-- **`maxWorkers`** (default: `4`) — Maximum active workers. Prevents unlimited worker spawns.
-- **`maxQueueSize`** (default: `Infinity`) — Max tasks allowed in queue if workers are busy.
-- **`terminateIdleDelay`** (default: `500` ms) — Delay before terminating idle workers beyond `minWorkers`.
+- **minWorkers** (default: `1`) — Minimum idle workers kept alive. Prevents cold starts stays ready for upcoming calls.
+- **maxWorkers** (default: `4`) — Maximum active workers. Prevents unlimited worker spawns.
+- **maxQueueSize** (default: `Infinity`) — Max tasks allowed in queue if workers are busy.
+- **terminateIdleDelay** (default: `500` ms) — Delay before terminating idle workers beyond `minWorkers`.
 
 ---
 
 ### Properties
 
-- **`pool`** — Active workers pool (debugging only).
-- **`queue`** — Pending task queue (debugging only).
+- **pool** (read only) — Active workers pool.
+- **queue** (read only) — Pending task queue.
 
 ---
 
@@ -197,13 +197,63 @@ await elasticWorker.terminate();
 A `DedicatedWorker` runs in a **single worker thread**.
 It can maintain **state** since it is using single worker thead, but the state can be lost if that worker is crashed or terminated. I recommend to use **ElasticWorker** with managing state in main thread.
 
-### API
+### Constructor
 
-| Property    | Type     | Params     | Return   | Description                                   |
-| ----------- | -------- | ---------- | -------- | --------------------------------------------- |
-| `busy`      | boolean  | –          | –        | Indicates if the worker is currently busy     |
-| `func`      | function | `funcName` | function | Returns a callable function by name           |
-| `terminate` | function | –          | –        | Terminates the worker and stops any execution |
+```ts
+new DedicatedWorker(url, options);
+```
+
+- `url` — URL of the worker file
+- `options`:
+  - `maxQueueSize` (default: `Infinity`) — Max tasks allowed in queue if worker is busy.
+
+Example
+
+```ts
+const workerUrl = new URL("./worker.ts", import.meta.url);
+const dedicatedWorker = new DedicatedWorker(workerUrl, {
+  maxQueueSize: 1000,
+});
+```
+
+### Properties
+
+- **busy** (read only) — Indicates worker is executing a task
+- **queue** (read only) — Pending task queue.
+- **isTerminated** (read only) — Worker is terminated or not
+
+- **busy** —
+
+### Methods
+
+#### `func`
+
+Creates a callable function bound to a worker function.
+
+```ts
+const add = elasticWorker.func("add");
+```
+
+Parameters:
+
+- `funcName` — Name of the worker function
+
+#### `terminate`
+
+Terminates worker and clears the queue.
+Use only if you are sure no further tasks are needed.
+
+```ts
+await dedicatedWorker.terminate();
+```
+
+#### `respawn`
+
+Respawn the terminated worker.
+
+```ts
+dedicatedWorker.respawn();
+```
 
 ### Example
 
@@ -232,26 +282,6 @@ const calculator = new Calculator();
 initWorker(calculator);
 ```
 
-Alternatively, you can implement it like below, depending on your preference:
-
-```ts
-let result;
-const add = (a, b) => {
-  result = a + b;
-  return result;
-};
-const sub = (a, b) => {
-  result = a - b;
-  return result;
-};
-const lastResult = () => result;
-
-const calculator = { add, sub, lastResult };
-
-initWorker(calculator);
-export type Calculator = typeof calculator;
-```
-
 In this example, we store the last calculation result in the `result` variable. You can retrieve this in the main thread using the `lastResult` function.
 
 **main.ts**
@@ -272,13 +302,31 @@ console.log(await lastResult()); // 30
 
 ---
 
----
-
 ## Errors
 
+**TimeoutError** — a worker call has been timed out
+**QueueOverflowError** — Max queue limit reached
+**AbortedError** — a worker call has been aborted
+**WorkerTerminatedError** — worker has been terminated
+**FunctionNotFoundError** — given function is not registered in worker functions
+
 ---
 
-## Performance
+## Benchmark
+
+Here is the comparison of main thread, ElasticWorker and DedicatedWorker.
+You can see the how I do the comparison in `examples/js/benchmark.js` file of the GitHub repo.
+As you see `DedicatedWorker` is about the same speed even a bit slower coz it has other overhead.
+The main thing that `DedicatedWorker` help here is unblock the main thread.
+
+```log
+Main thread: 597.24 ms
+Elastic worker: 81.62 ms
+Dedicated worker: 605.02 ms
+```
+
+- **Elastic vs Main**: 597.24 / 81.62 ≈ 7.32× faster
+- **Dedicated vs Main**: 605.02 / 597.24 ≈ 1.3% slower
 
 ---
 
