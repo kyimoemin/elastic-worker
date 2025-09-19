@@ -17,8 +17,6 @@
 - [Benchmark](#benchmark)
 - [License](#license)
 
----
-
 ## Overview
 
 `async-multi-worker` provides a simple and unified abstraction over **Web Workers** (browser) and **Worker Threads** (Node.js).
@@ -31,15 +29,11 @@ This package exports:
 - [`ElasticWorker`](#elasticworker) — scalable worker pool for parallel execution
 - [`DedicatedWorker`](#dedicatedworker) — single persistent worker that can maintain state
 
----
-
 ## Installation
 
 ```bash
 npm install async-multi-worker
 ```
-
----
 
 ## Quick Start
 
@@ -89,16 +83,12 @@ const subResult = await subtract(5, 3); // runs in worker
 main.ts  →  ElasticWorker / DedicatedWorker  →  worker.ts (your functions)
 ```
 
----
-
 ## Architecture
 
 - **Main thread**: Creates and manages worker instances.
 - **Worker thread**: Contains your registered functions. Communication happens via `postMessage` under the hood.
 - **ElasticWorker**: Spawns multiple workers on demand, scales up/down based on load.
 - **DedicatedWorker**: Runs a single worker, useful for stateful tasks.
-
----
 
 ## initWorker
 
@@ -111,8 +101,6 @@ Registers functions inside a worker context.
 ```ts
 initWorker(functionsObject);
 ```
-
----
 
 ## ElasticWorker
 
@@ -150,8 +138,6 @@ const workerUrl = pathToFileURL(path.resolve("./worker.js"));
 const elasticWorker = new ElasticWorker(workerUrl);
 ```
 
----
-
 ### Options
 
 - **minWorkers** (default: `1`) — Minimum idle workers to keep alive, prevents cold starts.
@@ -159,14 +145,10 @@ const elasticWorker = new ElasticWorker(workerUrl);
 - **maxQueueSize** (default: `Infinity`) — Maximum tasks queued while workers are busy.
 - **terminateIdleDelay** (default: `500` ms) — Idle timeout before terminating extra workers.
 
----
-
 ### Properties
 
 - **pool** _(read-only)_ — Current worker pool.
 - **queue** _(read-only)_ — Pending task queue.
-
----
 
 ### Methods
 
@@ -190,8 +172,6 @@ Parameters:
   - `timeoutMs` (default: `5000`) — Call timeout
   - `signal` — [AbortSignal](https://developer.mozilla.org/en-US/docs/Web/API/AbortSignal) for cancellation
 
----
-
 #### `terminate`
 
 Gracefully terminates all workers and clears the queue.  
@@ -200,8 +180,6 @@ Use this if you’re finished with the worker pool.
 ```ts
 await elasticWorker.terminate();
 ```
-
----
 
 ## DedicatedWorker
 
@@ -218,15 +196,11 @@ new DedicatedWorker(url, options);
 - `options`:
   - `maxQueueSize` (default: `Infinity`) — Max queued tasks
 
----
-
 ### Properties
 
 - **busy** _(read-only)_ — Worker is currently executing a task
 - **queue** _(read-only)_ — Pending tasks
 - **isTerminated** _(read-only)_ — Worker termination status
-
----
 
 ### Methods
 
@@ -253,8 +227,6 @@ Restarts a terminated worker.
 ```ts
 dedicatedWorker.respawn();
 ```
-
----
 
 ### Example
 
@@ -291,8 +263,6 @@ await add(10, 20);
 console.log(await lastResult()); // 30
 ```
 
----
-
 ## Errors
 
 - **TimeoutError** — Worker call exceeded timeout
@@ -300,8 +270,6 @@ console.log(await lastResult()); // 30
 - **AbortedError** — Worker call was cancelled
 - **WorkerTerminatedError** — Worker was terminated
 - **FunctionNotFoundError** — Function not registered in worker
-
----
 
 ## Benchmark
 
@@ -317,8 +285,6 @@ Dedicated worker: 605.02 ms
 - **Dedicated vs Main** → ~1.3% slower (but non-blocking)
 
 See [`examples/js/benchmark.js`](./examples/js/benchmark.js) for details.
-
----
 
 ## License
 
