@@ -110,10 +110,10 @@ describe("ElasticWorker", () => {
     expect(() => {
       // @ts-expect-error
       elasticWorker.queue.set(0, {});
-    }).toThrow("This Map is read-only (proxy blocked).");
+    }).toThrow("This Queue is read-only (proxy blocked).");
     expect(() => {
       elasticWorker.queue.clear();
-    }).toThrow("This Map is read-only (proxy blocked).");
+    }).toThrow("This Queue is read-only (proxy blocked).");
     // pool
     expect(() => {
       // @ts-expect-error

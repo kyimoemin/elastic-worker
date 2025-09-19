@@ -1,6 +1,6 @@
 {
   "name": "async-multi-worker",
-  "version": "1.3.1",
+  "version": "1.3.2",
   "description": "Use worker as simple asynchronous function",
   "type": "module",
   "main": "./dist/node/index.js",

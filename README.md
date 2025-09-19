@@ -15,7 +15,6 @@
 - [DedicatedWorker](#dedicatedworker)
 - [Errors](#errors)
 - [Benchmark](#benchmark)
-- [Contributing](#contributing)
 - [License](#license)
 
 ---
@@ -48,11 +47,11 @@ Organize your project with a **separated worker file**:
 
 ```
 src/
-	worker.ts
-	main.ts
+ worker.ts
+ main.ts
 ```
 
-### 1. Define worker functions (`worker.ts`)
+#### 1. Define worker functions (`worker.ts`)
 
 ```ts
 import { initWorker } from "async-multi-worker";
@@ -68,7 +67,7 @@ export type Calculator = typeof calc;
 initWorker(calc);
 ```
 
-### 2. Use them from the main thread (`main.ts`)
+#### 2. Use them from the main thread (`main.ts`)
 
 ```ts
 import { ElasticWorker } from "async-multi-worker";
@@ -318,17 +317,6 @@ Dedicated worker: 605.02 ms
 - **Dedicated vs Main** → ~1.3% slower (but non-blocking)
 
 See [`examples/js/benchmark.js`](./examples/js/benchmark.js) for details.
-
----
-
-## Contributing
-
-Contributions are welcome!
-
-1. Fork the repo
-2. Create a feature branch
-3. Run tests with `npm test`
-4. Open a Pull Request
 
 ---
 
