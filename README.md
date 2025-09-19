@@ -284,6 +284,7 @@ Dedicated worker: 605.02 ms
 - **Elastic vs Main** → ~7.3× faster
 - **Dedicated vs Main** → ~1.3% slower (but non-blocking)
 
+Benchmark may vary depending on the number of threads allowed and the type of task being executed.
 See [`examples/js/benchmark.js`](./examples/js/benchmark.js) for details.
 
 ## License
