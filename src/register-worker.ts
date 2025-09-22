@@ -6,7 +6,7 @@ import type { FunctionsRecord, RequestPayload, ResponsePayload } from "./types";
  *
  * @param obj Object containing functions to be called in the worker.
  */
-export const initWorker = <T extends FunctionsRecord>(obj: T) => {
+export const registerWorker = <T extends FunctionsRecord>(obj: T) => {
   const host = new Host();
   host.onmessage = async (data) => {
     const { func, args, id } = data as RequestPayload<Parameters<T[keyof T]>>;

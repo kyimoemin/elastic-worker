@@ -3,7 +3,7 @@ import {
   DedicatedWorker,
   ElasticWorker,
   TimeoutError,
-  initWorker,
+  registerWorker,
 } from "../../src/index";
 
 describe("index", () => {
@@ -11,6 +11,6 @@ describe("index", () => {
     expect(DedicatedWorker).toBeDefined();
     expect(ElasticWorker).toBeDefined();
     expect(TimeoutError).toBeDefined();
-    expect(initWorker).toBeDefined();
+    expect(registerWorker).toBeDefined();
   });
 });

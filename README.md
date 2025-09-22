@@ -1,8 +1,8 @@
-# async-multi-worker
+# elastic-worker
 
-![npm version](https://img.shields.io/npm/v/async-multi-worker)
-![npm downloads](https://img.shields.io/npm/dm/async-multi-worker)
-![license](https://img.shields.io/npm/l/async-multi-worker)
+![npm version](https://img.shields.io/npm/v/elastic-worker)
+![npm downloads](https://img.shields.io/npm/dm/elastic-worker)
+![license](https://img.shields.io/npm/l/elastic-worker)
 
 ## Table of Contents
 
@@ -10,7 +10,7 @@
 - [Installation](#installation)
 - [Quick Start](#quick-start)
 - [Architecture](#architecture)
-- [initWorker](#initworker)
+- [registerWorker](#registerworker)
 - [ElasticWorker](#elasticworker)
 - [DedicatedWorker](#dedicatedworker)
 - [Errors](#errors)
@@ -19,20 +19,20 @@
 
 ## Overview
 
-`async-multi-worker` provides a simple and unified abstraction over **Web Workers** (browser) and **Worker Threads** (Node.js).
+`elastic-worker` provides a simple and unified abstraction over **Web Workers** (browser) and **Worker Threads** (Node.js).
 
 It enables developers to run CPU-intensive or blocking tasks in worker threads **without manually handling worker setup, messaging, or lifecycle management**.
 
 This package exports:
 
-- [`initWorker`](#initworker) — register functions inside a worker context
+- [`registerWorker`](#registerworker) — register functions inside a worker context
 - [`ElasticWorker`](#elasticworker) — scalable worker pool for parallel execution
 - [`DedicatedWorker`](#dedicatedworker) — single persistent worker that can maintain state
 
 ## Installation
 
 ```bash
-npm install async-multi-worker
+npm install elastic-worker
 ```
 
 ## Quick Start
@@ -48,7 +48,7 @@ src/
 #### 1. Define worker functions (`worker.ts`)
 
 ```ts
-import { initWorker } from "async-multi-worker";
+import { registerWorker } from "elastic-worker";
 
 const add = (a: number, b: number) => a + b;
 const sub = (a: number, b: number) => a - b;
@@ -58,13 +58,13 @@ const calc = { add, sub };
 export type Calculator = typeof calc;
 
 // Register functions for worker usage
-initWorker(calc);
+registerWorker(calc);
 ```
 
 #### 2. Use them from the main thread (`main.ts`)
 
 ```ts
-import { ElasticWorker } from "async-multi-worker";
+import { ElasticWorker } from "elastic-worker";
 import type { Calculator } from "./worker.ts";
 
 const workerUrl = new URL("./worker.ts", import.meta.url);
@@ -90,16 +90,16 @@ main.ts  →  ElasticWorker / DedicatedWorker  →  worker.ts (your functions)
 - **ElasticWorker**: Spawns multiple workers on demand, scales up/down based on load.
 - **DedicatedWorker**: Runs a single worker, useful for stateful tasks.
 
-## initWorker
+## registerWorker
 
 Registers functions inside a worker context.
 
 > [!CAUTION]  
-> Functions and variables defined in the worker file where `initWorker` is called **cannot** be directly imported into the main thread.  
+> Functions and variables defined in the worker file where `registerWorker` is called **cannot** be directly imported into the main thread.  
 > They must be accessed through a worker wrapper (`ElasticWorker` or `DedicatedWorker`).
 
 ```ts
-initWorker(functionsObject);
+registerWorker(functionsObject);
 ```
 
 ## ElasticWorker
@@ -233,7 +233,7 @@ dedicatedWorker.respawn();
 **worker.ts**
 
 ```ts
-import { initWorker } from "async-multi-worker";
+import { registerWorker } from "elastic-worker";
 
 export class Calculator {
   result: number;
@@ -244,13 +244,13 @@ export class Calculator {
 }
 
 const calculator = new Calculator();
-initWorker(calculator);
+registerWorker(calculator);
 ```
 
 **main.ts**
 
 ```ts
-import { DedicatedWorker } from "async-multi-worker";
+import { DedicatedWorker } from "elastic-worker";
 import type { Calculator } from "./worker.ts";
 
 const workerUrl = new URL("./worker.ts", import.meta.url);

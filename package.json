@@ -1,5 +1,5 @@
 {
-  "name": "async-multi-worker",
+  "name": "elastic-worker",
   "version": "1.3.2",
   "description": "Use worker as simple asynchronous function",
   "type": "module",
@@ -12,16 +12,19 @@
   },
   "keywords": [
     "async-worker",
-    "async-multi-worker",
+    "elastic-worker",
     "async",
     "worker",
-    "multi-worker"
+    "multi-worker",
+    "elastic-worker",
+    "web-worker",
+    "node-worker"
   ],
   "author": "Kyi Moe Min <kyimoemin0@gmail.com>",
   "license": "MIT",
   "repository": {
     "type": "git",
-    "url": "https://github.com/kyimoemin/async-multi-worker.git"
+    "url": "https://github.com/kyimoemin/elastic-worker.git"
   },
   "publishConfig": {
     "registry": "https://registry.npmjs.org/"

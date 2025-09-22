@@ -1,4 +1,4 @@
-import { initWorker } from "async-multi-worker";
+import { registerWorker } from "elastic-worker";
 
 const add = (a, b) => a + b;
 
@@ -6,4 +6,4 @@ const subtract = (a, b) => a - b;
 
 const calculator = { add, subtract };
 
-initWorker(calculator);
+registerWorker(calculator);

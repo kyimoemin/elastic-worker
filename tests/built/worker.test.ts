@@ -3,18 +3,18 @@ import {
   DedicatedWorker,
   ElasticWorker,
   TimeoutError,
-  initWorker,
-} from "async-multi-worker";
+  registerWorker,
+} from "elastic-worker";
 
 // # Tests for build files
 
-describe("initWorker", () => {
+describe("registerWorker", () => {
   it("should be defined", () => {
-    expect(initWorker).toBeDefined();
+    expect(registerWorker).toBeDefined();
   });
   it("should be a function with correct parameters", () => {
-    expect(typeof initWorker).toBe("function");
-    expect(initWorker.length).toBe(1);
+    expect(typeof registerWorker).toBe("function");
+    expect(registerWorker.length).toBe(1);
   });
 });
 

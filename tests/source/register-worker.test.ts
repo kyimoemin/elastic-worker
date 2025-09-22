@@ -38,13 +38,13 @@ afterEach(() => {
 let functions;
 
 async function importInitWorker() {
-  return import("../../src/init-worker");
+  return import("../../src/register-worker");
 }
 
-describe("initWorker", () => {
+describe("registerWorker", () => {
   it("should call the correct function and post result", async () => {
-    const { initWorker } = await importInitWorker();
-    initWorker(functions);
+    const { registerWorker } = await importInitWorker();
+    registerWorker(functions);
     const payload = { func: "add", args: [2, 3], id: "1" };
     await mockHost.triggerMessage(payload);
     expect(functions.add).toHaveBeenCalledWith(2, 3);
@@ -55,8 +55,8 @@ describe("initWorker", () => {
   });
 
   it("should post error if function throws", async () => {
-    const { initWorker } = await importInitWorker();
-    initWorker(functions);
+    const { registerWorker } = await importInitWorker();
+    registerWorker(functions);
     const payload = { func: "fail", args: [], id: "2" };
     await mockHost.triggerMessage(payload);
     const call = mockHost.postMessage.mock.calls[0][0];
@@ -67,8 +67,8 @@ describe("initWorker", () => {
   });
 
   it("should post error if function does not exist", async () => {
-    const { initWorker } = await importInitWorker();
-    initWorker(functions);
+    const { registerWorker } = await importInitWorker();
+    registerWorker(functions);
     const payload = { func: "notfound", args: [], id: "3" };
     await mockHost.triggerMessage(payload);
     const call = mockHost.postMessage.mock.calls[0][0];

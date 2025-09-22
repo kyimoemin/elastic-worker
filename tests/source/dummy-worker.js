@@ -1,4 +1,4 @@
-import { initWorker } from "async-multi-worker";
+import { registerWorker } from "elastic-worker";
 
 const add = (a, b) => a + b;
 
@@ -15,4 +15,4 @@ const error = (a, b) => {
 
 const calculator = { add, subtract, error, fibonacci };
 
-initWorker(calculator);
+registerWorker(calculator);

@@ -1,4 +1,4 @@
-import { ElasticWorker, DedicatedWorker } from "async-multi-worker";
+import { ElasticWorker, DedicatedWorker } from "elastic-worker";
 import { fibonacci } from "./fibonacci.js";
 const workerURL = new URL("./worker.js", import.meta.url);
 
