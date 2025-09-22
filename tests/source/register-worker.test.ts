@@ -37,13 +37,13 @@ afterEach(() => {
 
 let functions;
 
-async function importInitWorker() {
+async function importRegisterWorker() {
   return import("../../src/register-worker");
 }
 
 describe("registerWorker", () => {
   it("should call the correct function and post result", async () => {
-    const { registerWorker } = await importInitWorker();
+    const { registerWorker } = await importRegisterWorker();
     registerWorker(functions);
     const payload = { func: "add", args: [2, 3], id: "1" };
     await mockHost.triggerMessage(payload);
@@ -55,7 +55,7 @@ describe("registerWorker", () => {
   });
 
   it("should post error if function throws", async () => {
-    const { registerWorker } = await importInitWorker();
+    const { registerWorker } = await importRegisterWorker();
     registerWorker(functions);
     const payload = { func: "fail", args: [], id: "2" };
     await mockHost.triggerMessage(payload);
@@ -67,7 +67,7 @@ describe("registerWorker", () => {
   });
 
   it("should post error if function does not exist", async () => {
-    const { registerWorker } = await importInitWorker();
+    const { registerWorker } = await importRegisterWorker();
     registerWorker(functions);
     const payload = { func: "notfound", args: [], id: "3" };
     await mockHost.triggerMessage(payload);
