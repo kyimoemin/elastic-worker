@@ -84,7 +84,7 @@ describe("DedicatedWorker", () => {
   });
 
   it("should respawn worker on error and resolve new calls", async () => {
-    // cannot simulate crash in test, coz all uncaught exceptions are caught in initWorker function
+    // cannot simulate crash in test, coz all uncaught exceptions are caught in registerWorker function
     const err = dedicatedWorker.func("error");
     await expect(err(1, 2)).rejects.toThrow("fail");
     // After error, new calls should still work

@@ -16,7 +16,7 @@ export type DedicatedWorkerOptions = {
 };
 
 /**
- * @deprecated This class will not be removed in the future versions,
+ * @deprecated This class will be removed in the future versions,
  * but it's recommended to use `ElasticWorker` for better performance and scalability.
  * If you want to maintain state between calls, consider using `ElasticWorker` with a shared state management approach.
  *

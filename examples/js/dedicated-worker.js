@@ -1,4 +1,4 @@
-import { DedicatedWorker } from "async-multi-worker";
+import { DedicatedWorker } from "elastic-worker";
 
 const workerURL = new URL("./worker.js", import.meta.url);
 

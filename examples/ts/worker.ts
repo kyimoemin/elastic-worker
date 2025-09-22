@@ -1,4 +1,4 @@
-import { initWorker } from "async-multi-worker";
+import { registerWorker } from "elastic-worker";
 
 export class Calculator {
   add(a: number, b: number) {
@@ -15,4 +15,4 @@ export class Calculator {
 }
 const calculator = new Calculator();
 
-initWorker(calculator);
+registerWorker(calculator);
