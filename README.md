@@ -1,5 +1,9 @@
 # async-multi-worker
 
+## Deprecated
+
+**This package has been renamed to [elastic-worker](https://www.npmjs.com/package/elastic-worker)**
+
 ![npm version](https://img.shields.io/npm/v/async-multi-worker)
 ![npm downloads](https://img.shields.io/npm/dm/async-multi-worker)
 ![license](https://img.shields.io/npm/l/async-multi-worker)
