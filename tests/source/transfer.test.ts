@@ -39,8 +39,8 @@ describe("Transfer", () => {
     expect(result.__isTransferable).toBe(true);
   });
 
-  it("convertToTransfer should return the input if not a Transfer", () => {
+  it("convertToTransfer should return undefined for non-Transfer input (overload)", () => {
     const obj = { foo: "bar" };
-    expect(convertToTransfer(obj)).toBe(obj);
+    expect(convertToTransfer(obj)).toBeUndefined();
   });
 });

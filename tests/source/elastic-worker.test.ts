@@ -101,6 +101,26 @@ describe("ElasticWorker", () => {
     poolWorker.terminate();
   });
 
+  it("should transfer ArrayBuffer using Transfer object", async () => {
+    const Transfer = (await import("../../src/utils/transfer")).Transfer;
+    const buffer = new ArrayBuffer(8);
+    const view = new Uint8Array(buffer);
+    for (let i = 0; i < view.length; i++) view[i] = i;
+    const transfer = new Transfer(buffer, [buffer]);
+    const transferFn = elasticWorker.func("transfer");
+    expect(buffer.byteLength).toBe(8);
+    const promise = transferFn(transfer);
+    expect(buffer.byteLength).toBe(0);
+    const result = await promise;
+    expect(result).toBeInstanceOf(Transfer);
+    expect(result.value).toBeInstanceOf(ArrayBuffer);
+    expect(result.value.byteLength).toBe(8);
+    const resultView = new Uint8Array(result.value);
+    for (let i = 0; i < resultView.length; i++) {
+      expect(resultView[i]).toBe(i);
+    }
+  });
+
   it("should expose read-only queue and pool proxies", () => {
     expect(elasticWorker.queue).toBeDefined();
     expect(elasticWorker.queue.size).toBeDefined();

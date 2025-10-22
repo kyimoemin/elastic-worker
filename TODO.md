@@ -7,7 +7,9 @@
 
 ## next version
 
-- [ ] add transferList option
-  - [ ] main thread to worker
-  - [ ] worker to main thread
+- [x] add transferList option
+  - [x] main thread to worker
+  - [x] worker to main thread
 - [x] remove dedicated worker from the doc
+- [ ] add doc for transferable
+- [ ] add example for transferable

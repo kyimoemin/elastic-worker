@@ -17,6 +17,7 @@ import type {
 import { combineSignals } from "./utils/abort-signal";
 import { Queue } from "./utils/queue";
 import { getReadonlyProxy } from "./utils/readonly-proxy";
+import { convertToTransfer, isTransfer, Transfer } from "./utils/transfer";
 import { WorkerPool } from "./utils/worker-pool";
 
 type MessageListenerParam = {
@@ -106,7 +107,7 @@ export class ElasticWorker<T extends FunctionsRecord>
         if (error.stack) e.stack = error.stack;
         reject(e);
       } else {
-        resolve(result);
+        resolve(convertToTransfer(result) ?? result);
       }
       /**
        * todo :
@@ -214,7 +215,15 @@ export class ElasticWorker<T extends FunctionsRecord>
         }
       };
       worker.onexit = () => reject(new WorkerTerminatedError());
-      worker.postMessage({ func, args, id });
+      const isTransfer = args[0] instanceof Transfer;
+      if (isTransfer && args.length > 1)
+        throw new Error(
+          "Transfer can only be used with single argument, please wrap your arguments in Transfer object."
+        );
+      worker.postMessage(
+        { func, args, id },
+        isTransfer ? (args[0] as Transfer<unknown>).transferList : undefined
+      );
     }
   };
   /**

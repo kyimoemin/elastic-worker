@@ -43,8 +43,7 @@ export const isTransfer = (obj: any): obj is Transfer<any> => {
 };
 
 export function convertToTransfer<T, U>(obj: Transfer<U>): Transfer<U>;
-export function convertToTransfer<T>(obj: T): T;
+export function convertToTransfer<T>(obj: T): never;
 export function convertToTransfer<T>(obj: T): any {
   if (isTransfer(obj)) return new Transfer(obj.value, obj.transferList);
-  return obj;
 }
