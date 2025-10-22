@@ -1,8 +1,13 @@
 # elastic-worker
 
+## 1.3.3
+
+- [x] rename initWorker to registerWorker
+- [x] rename package
+
 ## next version
 
-- [ ] rename registerWorker to registerWorker
-- [ ] rename package
-- [ ] shared array buffer (SharedArrayBuffer can be passed directly without any extra implementations)
-- [ ] check postMessage transfer option (need to pass transferList, the second parameter of worker.postMessage)
+- [ ] add transferList option
+  - [ ] main thread to worker
+  - [ ] worker to main thread
+- [x] remove dedicated worker from the doc
