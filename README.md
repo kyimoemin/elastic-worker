@@ -109,6 +109,8 @@ new ElasticWorker(url, options);
 **Example (ESM):**
 
 ```ts
+import { ElasticWorker } from "elastic-worker";
+
 const workerUrl = new URL("./worker.ts", import.meta.url);
 const elasticWorker = new ElasticWorker(workerUrl, {
   minWorkers: 2,
@@ -121,8 +123,9 @@ const elasticWorker = new ElasticWorker(workerUrl, {
 **Example (CJS):**
 
 ```ts
-import path from "path";
-import { pathToFileURL } from "url";
+const { ElasticWorker } = require("elastic-worker");
+const { pathToFileURL } = require("url");
+const path = require("path");
 
 const workerUrl = pathToFileURL(path.resolve("./worker.js"));
 const elasticWorker = new ElasticWorker(workerUrl);
