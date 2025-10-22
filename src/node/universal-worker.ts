@@ -1,5 +1,9 @@
 import { Worker } from "worker_threads";
-import { RequestPayload, UniversalWorkerInterface } from "../types";
+import {
+  RequestPayload,
+  UniversalTransferable,
+  UniversalWorkerInterface,
+} from "../types";
 
 export class UniversalWorker implements UniversalWorkerInterface {
   private worker: Worker;
@@ -8,8 +12,11 @@ export class UniversalWorker implements UniversalWorkerInterface {
     this.worker = new Worker(workerURL);
   }
 
-  postMessage(message: RequestPayload<any>): void {
-    this.worker.postMessage(message);
+  postMessage(
+    message: RequestPayload<any>,
+    transferList?: UniversalTransferable[]
+  ): void {
+    this.worker.postMessage(message, transferList);
   }
 
   set onmessage(handler: UniversalWorkerInterface["onmessage"]) {

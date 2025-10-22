@@ -1,14 +1,18 @@
-import { HostInterface } from "../types";
+import { HostInterface, UniversalTransferable } from "../types";
 
 export class Host implements HostInterface {
-  readonly postMessage: (message: any) => void;
+  readonly postMessage: (
+    message: any,
+    transferList?: UniversalTransferable[]
+  ) => void;
   constructor() {
     if (!self) {
       throw new Error(
         "`self` is not available. Make sure you are running on browser environment."
       );
     }
-    this.postMessage = (data) => self.postMessage(data);
+    this.postMessage = (data, transferList) =>
+      self.postMessage(data, { transfer: transferList });
   }
 
   set onmessage(callback: (data: any) => void) {

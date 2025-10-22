@@ -1,5 +1,5 @@
 import { UniversalWorker } from "../../../src/browser/universal-worker";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, vi } from "vitest";
 
 class MockWorker {
   onmessage = null;
@@ -31,5 +31,13 @@ describe("Browser > UniversalWorker", () => {
   it("should have necessary methods", () => {
     expect(worker.postMessage).toBeDefined();
     expect(worker.terminate).toBeDefined();
+  });
+
+  it("should call postMessage with transferList", () => {
+    const spy = vi.spyOn(worker["worker"], "postMessage");
+    const message = { func: "foo", args: [], id: "1" };
+    const transferList = [new ArrayBuffer(8)];
+    worker.postMessage(message, transferList);
+    expect(spy).toHaveBeenCalledWith(message, transferList);
   });
 });

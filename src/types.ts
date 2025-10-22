@@ -1,3 +1,4 @@
+import type { Transferable as NodeTransferable } from "worker_threads";
 export type FunctionsRecord = Record<string, any>;
 
 export type PendingCall = {
@@ -41,7 +42,10 @@ export interface WorkerProxy<T extends FunctionsRecord> {
 }
 
 export interface UniversalWorkerInterface {
-  postMessage(message: RequestPayload<any>): void;
+  postMessage(
+    message: RequestPayload<any>,
+    transferList?: UniversalTransferable[]
+  ): void;
 
   onmessage(message: ResponsePayload<any>): void;
 
@@ -56,6 +60,8 @@ export interface UniversalWorkerInterface {
 }
 
 export interface HostInterface {
-  postMessage: (message: any) => void;
+  postMessage: (message: any, transferList?: UniversalTransferable[]) => void;
   onmessage: (data: any) => void;
 }
+
+export type UniversalTransferable = Transferable & NodeTransferable;
