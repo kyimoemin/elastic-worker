@@ -1,4 +1,3 @@
-import type { Transferable as NodeTransferable } from "worker_threads";
 export type FunctionsRecord = Record<string, any>;
 
 export type PendingCall = {
@@ -64,4 +63,10 @@ export interface HostInterface {
   onmessage: (data: any) => void;
 }
 
-export type UniversalTransferable = Transferable & NodeTransferable;
+/**
+ *
+ * See related links for supported transferable objects.
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Transferable_objects#supported_objects | Web Transferable}
+ * @see {@link https://nodejs.org/api/worker_threads.html#portpostmessagevalue-transferlist | Node.js Transferable}
+ */
+export type UniversalTransferable = any;
