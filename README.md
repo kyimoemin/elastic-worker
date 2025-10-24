@@ -217,8 +217,6 @@ const processLargeData = (t: Transfer) => {
 registerWorker({ processLargeData });
 ```
 
----
-
 ### Constructor
 
 The `Transfer` constructor takes two parameters:
@@ -236,11 +234,9 @@ const transfer = new Transfer(
 );
 ```
 
----
-
 ### Properties
 
-- **`value`** — The actual data being transferred between the main and worker threads.
+- **`value`** — The data being transferred between the main and worker threads.
 
 ## Errors
 
