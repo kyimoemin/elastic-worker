@@ -11,7 +11,7 @@
   - [x] main thread to worker
   - [x] worker to main thread
 - [x] remove dedicated worker from the doc
-- [ ] add doc for transferable
+- [x] add doc for transferable
 - [x] add example for transferable
 
 ## next version 2.0.0
