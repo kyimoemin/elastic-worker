@@ -20,7 +20,7 @@ export type DedicatedWorkerOptions = {
  * This class manages communication between the main thread and a worker, allowing you to call worker-exposed functions as Promises.
  * It handles message passing, result/error propagation, timeouts, and worker cleanup.
  *
- * @deprecated This class will be removed in the future versions.
+ * @deprecated This class will be removed in next major version.
  *
  * @template T - The type describing the functions exposed by the worker .
  *
