@@ -1,4 +1,4 @@
-import { ElasticWorker, DedicatedWorker } from "elastic-worker";
+import { ElasticWorker } from "elastic-worker";
 import { fibonacci } from "./fibonacci.js";
 const workerURL = new URL("./worker.js", import.meta.url);
 
@@ -6,7 +6,6 @@ const elasticWorker = new ElasticWorker(workerURL, {
   minWorkers: 4,
   maxWorkers: 8,
 });
-const dedicatedWorker = new DedicatedWorker(workerURL);
 
 const FIBONACCI_NUM = 30;
 const ITERATION = 100;
@@ -60,10 +59,6 @@ async function main() {
     elasticWorker.func("fibonacci")(FIBONACCI_NUM).catch(console.error)
   );
   console.log(`Elastic worker: ${elasticWorkerTime.toFixed(2)} ms`);
-  const dedicatedWorkerTime = await bench(() =>
-    dedicatedWorker.func("fibonacci")(FIBONACCI_NUM)
-  );
-  console.log(`Dedicated worker: ${dedicatedWorkerTime.toFixed(2)} ms`);
 }
 
 main();
