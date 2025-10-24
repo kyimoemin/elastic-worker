@@ -1,5 +1,9 @@
 # CHANGELOG
 
+## 2.0.0
+
+- removed `DedicatedWorker`
+
 ## 1.4.1
 
 - update document
