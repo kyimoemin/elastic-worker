@@ -1,4 +1,4 @@
-import { ElasticWorker, Transfer } from "elastic-worker";
+import { ElasticWorker, Transfer, AbortedError } from "elastic-worker";
 
 const workerURL = new URL("./worker.js", import.meta.url);
 
@@ -24,3 +24,20 @@ const obj = { foo: "bar", buffer: new ArrayBuffer(8) };
 const t = new Transfer(obj, [obj.buffer]);
 const received = await transfer(t);
 console.log("Received transfer object:", received.value);
+
+const controller = new AbortController();
+const fibonacci = elasticWorker.func("fibonacci", {
+  signal: controller.signal,
+});
+
+try {
+  const promise = fibonacci(40);
+  controller.abort();
+  console.log("Fibonacci result:", await promise);
+} catch (e) {
+  if (e instanceof AbortedError) {
+    console.error("Fibonacci calculation was aborted:", e);
+  } else {
+    console.error("Fibonacci calculation failed:", e);
+  }
+}
