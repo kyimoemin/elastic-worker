@@ -115,7 +115,7 @@ export class ElasticWorker<T extends FunctionsRecord>
        * if yes, pick the first one and execute it
        * else mark the worker as idle
        */
-      return this.workerPool.idleWorker(worker);
+      return this.workerPool.releaseWorker(worker);
     };
   }
 
@@ -210,7 +210,7 @@ export class ElasticWorker<T extends FunctionsRecord>
         //respawn worker if pool size is below minPoolSize
         if (this.workerPool.pool.size < this.workerPool.minPoolSize) {
           const worker = this.workerPool.getWorker();
-          await this.workerPool.idleWorker(worker!);
+          await this.workerPool.releaseWorker(worker!);
           this.executeNextCall();
         }
       };
