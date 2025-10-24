@@ -1,10 +1,14 @@
 # CHANGELOG
 
-## 1.2.2
+## 1.4.0
 
-- CJS support
-- Nodejs support
-- use rollup
+- added `Transfer` class, support for [Transferable Objects](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Transferable_objects)
+- soft remove DedicatedWorker class
+
+## 1.3.3
+
+- rename `initWorker` to `registerWorker`
+- rename package to `elastic-worker`
 
 ## 1.3.0
 
@@ -28,3 +32,9 @@
 - expose readonly worker pool
 - expose readonly pending queue
 - AbortSignal support
+
+## 1.2.2
+
+- CJS support
+- Nodejs support
+- use rollup

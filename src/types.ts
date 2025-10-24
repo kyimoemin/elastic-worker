@@ -41,7 +41,10 @@ export interface WorkerProxy<T extends FunctionsRecord> {
 }
 
 export interface UniversalWorkerInterface {
-  postMessage(message: RequestPayload<any>): void;
+  postMessage(
+    message: RequestPayload<any>,
+    transferList?: UniversalTransferable[]
+  ): void;
 
   onmessage(message: ResponsePayload<any>): void;
 
@@ -56,6 +59,14 @@ export interface UniversalWorkerInterface {
 }
 
 export interface HostInterface {
-  postMessage: (message: any) => void;
+  postMessage: (message: any, transferList?: UniversalTransferable[]) => void;
   onmessage: (data: any) => void;
 }
+
+/**
+ *
+ * See related links for supported transferable objects.
+ * @see {@link https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Transferable_objects#supported_objects | Web Transferable}
+ * @see {@link https://nodejs.org/api/worker_threads.html#portpostmessagevalue-transferlist | Node.js Transferable}
+ */
+export type UniversalTransferable = any;

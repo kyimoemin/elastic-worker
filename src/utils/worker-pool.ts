@@ -121,10 +121,10 @@ export class WorkerPool {
   };
 
   /**
-   * Terminates a specific Worker and removes it from the pool when it is idle and existing workers exceed MAX_IDLE_WORKERS .
-   * @param worker The Worker instance to terminate.
+   * Releasing a worker marks it as idle and sets a timeout to terminate it if the pool exceeds the minimum size.
+   * @param worker The Worker instance to release.
    */
-  idleWorker = async (worker: UniversalWorkerInterface) => {
+  releaseWorker = async (worker: UniversalWorkerInterface) => {
     if (!worker) return;
     const workerInfo = this.workers.get(worker);
     if (!workerInfo) return worker.terminate();

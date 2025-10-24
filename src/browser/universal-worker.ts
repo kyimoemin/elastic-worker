@@ -6,8 +6,15 @@ export class UniversalWorker implements UniversalWorkerInterface {
     this.worker = new window.Worker(workerURL, { type: "module" });
   }
 
-  postMessage(message: RequestPayload<any>): void {
-    this.worker.postMessage(message);
+  postMessage(
+    message: RequestPayload<any>,
+    transferList?: Transferable[]
+  ): void {
+    if (transferList) {
+      this.worker.postMessage(message, transferList);
+    } else {
+      this.worker.postMessage(message);
+    }
   }
 
   set onmessage(handler: UniversalWorkerInterface["onmessage"]) {

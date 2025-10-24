@@ -1,6 +1,7 @@
 import { Host } from "#env-adapter";
 import { FunctionNotFoundError } from "./errors";
 import type { FunctionsRecord, RequestPayload, ResponsePayload } from "./types";
+import { convertToTransfer, Transfer } from "./utils/transfer";
 
 /**
  *
@@ -14,8 +15,14 @@ export const registerWorker = <T extends FunctionsRecord>(obj: T) => {
       if (typeof obj[func] !== "function") {
         throw new FunctionNotFoundError(String(func));
       }
-      const result = await obj[func](...args);
-      host.postMessage({ id, result });
+      const transfer = convertToTransfer(args[0]);
+
+      const result = transfer
+        ? await obj[func](transfer)
+        : await obj[func](...args);
+      if (result instanceof Transfer)
+        host.postMessage({ id, result }, result.transferList);
+      else host.postMessage({ id, result });
     } catch (error) {
       const err = error as Error;
       const response: ResponsePayload = {

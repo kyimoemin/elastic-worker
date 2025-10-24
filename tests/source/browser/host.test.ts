@@ -41,6 +41,20 @@ describe("Browser > Host", () => {
     const spy = vi.spyOn(host, "postMessage");
     host.postMessage(message);
     expect(spy).toHaveBeenCalledWith(message);
+    // Also check that self.postMessage is called with correct args
+    expect(globalThis.self.postMessage).toHaveBeenCalledWith(message, {
+      transfer: undefined,
+    });
+  });
+
+  it("should post a message with transferList", () => {
+    const host = new Host();
+    const message = { type: "test", payload: "Hello, world!" };
+    const transferList = [new ArrayBuffer(8)];
+    host.postMessage(message, transferList);
+    expect(globalThis.self.postMessage).toHaveBeenCalledWith(message, {
+      transfer: transferList,
+    });
   });
   it("should onmessage work properly", () => {
     const host = new Host();

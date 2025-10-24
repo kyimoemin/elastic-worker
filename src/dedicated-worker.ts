@@ -16,13 +16,11 @@ export type DedicatedWorkerOptions = {
 };
 
 /**
- * @deprecated This class will be removed in the future versions,
- * but it's recommended to use `ElasticWorker` for better performance and scalability.
- * If you want to maintain state between calls, consider using `ElasticWorker` with a shared state management approach.
- *
  * A generic handler for making asynchronous function calls to a Worker.
  * This class manages communication between the main thread and a worker, allowing you to call worker-exposed functions as Promises.
  * It handles message passing, result/error propagation, timeouts, and worker cleanup.
+ *
+ * @deprecated This class will be removed in next major version.
  *
  * @template T - The type describing the functions exposed by the worker .
  *

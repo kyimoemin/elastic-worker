@@ -45,6 +45,26 @@ describe("Node > Host > Worker Thread", () => {
     const spy = vi.spyOn(host, "postMessage");
     host.postMessage(message);
     expect(spy).toHaveBeenCalledWith(message);
+    // Also check that parentPort.postMessage is called with correct args
+    const { parentPort } = await import("worker_threads");
+    if (parentPort) {
+      expect(parentPort.postMessage).toHaveBeenCalledWith(message, undefined);
+    }
+  });
+
+  it("should post a message with transferList", async () => {
+    const Host = await importHost();
+    const host = new Host();
+    const message = { type: "test", payload: "Hello, world!" };
+    const transferList = [new ArrayBuffer(8)];
+    host.postMessage(message, transferList);
+    const { parentPort } = await import("worker_threads");
+    if (parentPort) {
+      expect(parentPort.postMessage).toHaveBeenCalledWith(
+        message,
+        transferList
+      );
+    }
   });
   it("should onmessage work properly", async () => {
     const { parentPort } = await import("worker_threads");

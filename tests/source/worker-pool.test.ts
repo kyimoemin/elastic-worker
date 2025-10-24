@@ -37,8 +37,8 @@ describe("WorkerPool", () => {
     expect(worker).toBeDefined();
     expect(worker === worker2).toBeFalsy();
     // Mark worker as idle, should set timeoutId
-    workerPool.idleWorker(worker2!);
-    workerPool.idleWorker(worker!);
+    workerPool.releaseWorker(worker2!);
+    workerPool.releaseWorker(worker!);
     const workerInfo = workerPool.pool.get(worker!);
     // workerInfo may be undefined if already terminated, so check if timeoutId is set or worker is removed
     if (workerInfo) {
@@ -70,7 +70,7 @@ describe("WorkerPool", () => {
     const worker2 = workerPool.getWorker();
     expect(worker1).not.toBe(worker2);
     // Mark worker1 as idle, should be reused
-    if (worker1) workerPool.idleWorker(worker1);
+    if (worker1) workerPool.releaseWorker(worker1);
     const worker3 = workerPool.getWorker();
     expect(worker3).toBe(worker1);
   });
@@ -82,9 +82,9 @@ describe("WorkerPool", () => {
     expect(worker3).toBeUndefined(); // maxPoolSize reached
     expect(workerPool.pool.size).toBe(maxPoolSize);
     const workers = [
-      workerPool.idleWorker(worker1!),
-      workerPool.idleWorker(worker2!),
-      workerPool.idleWorker(worker3!),
+      workerPool.releaseWorker(worker1!),
+      workerPool.releaseWorker(worker2!),
+      workerPool.releaseWorker(worker3!),
     ];
     await Promise.all(workers);
   });
@@ -92,8 +92,8 @@ describe("WorkerPool", () => {
     const worker1 = workerPool.getWorker();
     const worker2 = workerPool.getWorker();
     const workers = [
-      workerPool.idleWorker(worker1!),
-      workerPool.idleWorker(worker2!),
+      workerPool.releaseWorker(worker1!),
+      workerPool.releaseWorker(worker2!),
     ];
     await Promise.all(workers);
     expect(workerPool.pool.size).toBe(2);
@@ -124,7 +124,7 @@ describe("WorkerPool", () => {
 
   it("should handle idleWorker for unknown worker", () => {
     const fakeWorker = { terminate: vi.fn() };
-    workerPool.idleWorker(fakeWorker as any);
+    workerPool.releaseWorker(fakeWorker as any);
     expect(fakeWorker.terminate).toHaveBeenCalled();
   });
 });

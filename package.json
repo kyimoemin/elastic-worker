@@ -1,6 +1,6 @@
 {
   "name": "elastic-worker",
-  "version": "1.3.3",
+  "version": "1.4.0",
   "description": "Use worker as simple asynchronous function",
   "type": "module",
   "main": "./dist/node/index.js",

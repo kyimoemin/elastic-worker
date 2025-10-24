@@ -1,4 +1,4 @@
-import { registerWorker } from "elastic-worker";
+import { registerWorker, Transfer } from "elastic-worker";
 import { fibonacci } from "./fibonacci.js";
 
 /**
@@ -16,6 +16,17 @@ const add = (a, b) => a + b;
  */
 const subtract = (a, b) => a - b;
 
-const calculator = { add, subtract, fibonacci };
+/**
+ * @typedef {{foo:string,buffer:ArrayBuffer}} TransferObject
+ * @param {Transfer<TransferObject>} t
+ * @returns
+ */
+const transfer = (t) => t;
+
+const calculator = { add, subtract, fibonacci, transfer };
+
+/**
+ * @typedef {typeof calculator} CalculatorWorker
+ */
 
 registerWorker(calculator);

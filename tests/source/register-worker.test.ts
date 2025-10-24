@@ -27,6 +27,7 @@ beforeEach(() => {
     fail: vi.fn(() => {
       throw new Error("fail");
     }),
+    transfer: vi.fn((buffer) => buffer),
   };
 });
 
@@ -35,7 +36,7 @@ afterEach(() => {
   vi.clearAllMocks();
 });
 
-let functions;
+let functions: any;
 
 async function importRegisterWorker() {
   return import("../../src/register-worker");
@@ -76,5 +77,17 @@ describe("registerWorker", () => {
     expect(call.error).toBeDefined();
     expect(call.error.message).toBe("Function 'notfound' not found in worker.");
     expect(call.result).toBeUndefined();
+  });
+  it("should post result with transferList if function returns Transfer", async () => {
+    const { registerWorker } = await importRegisterWorker();
+    const buffer = new ArrayBuffer(4);
+    const { Transfer } = await import("../../src/utils/transfer");
+    const transferable = new Transfer(buffer, [buffer]);
+    registerWorker(functions);
+    const payload = { func: "transfer", args: [transferable], id: "4" };
+    await mockHost.triggerMessage(payload);
+    const call = mockHost.postMessage.mock.calls[0];
+    expect(call[0]).toMatchObject({ id: "4", result: expect.any(Object) });
+    expect(call[1]).toEqual([buffer]);
   });
 });

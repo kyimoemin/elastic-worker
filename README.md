@@ -9,10 +9,9 @@
 - [Overview](#overview)
 - [Installation](#installation)
 - [Quick Start](#quick-start)
-- [Architecture](#architecture)
 - [registerWorker](#registerworker)
 - [ElasticWorker](#elasticworker)
-- [DedicatedWorker](#dedicatedworker)
+- [Transfer](#transfer)
 - [Errors](#errors)
 - [Benchmark](#benchmark)
 - [License](#license)
@@ -27,7 +26,7 @@ This package exports:
 
 - [`registerWorker`](#registerworker) — register functions inside a worker context
 - [`ElasticWorker`](#elasticworker) — scalable worker pool for parallel execution
-- [`DedicatedWorker`](#dedicatedworker) — single persistent worker that can maintain state
+- [`Transfer`](#transfer) - a class to use for passing transferable objects
 
 ## Installation
 
@@ -80,23 +79,15 @@ const subResult = await subtract(5, 3); // runs in worker
 ### Flow at a Glance
 
 ```
-main.ts  →  ElasticWorker / DedicatedWorker  →  worker.ts (your functions)
+main.ts  →  ElasticWorker  →  worker.ts (your functions)
 ```
-
-## Architecture
-
-- **Main thread**: Creates and manages worker instances.
-- **Worker thread**: Contains your registered functions. Communication happens via `postMessage` under the hood.
-- **ElasticWorker**: Spawns multiple workers on demand, scales up/down based on load.
-- **DedicatedWorker**: Runs a single worker, useful for stateful tasks.
 
 ## registerWorker
 
 Registers functions inside a worker context.
 
 > [!CAUTION]  
-> Functions and variables defined in the worker file where `registerWorker` is called **cannot** be directly imported into the main thread.  
-> They must be accessed through a worker wrapper (`ElasticWorker` or `DedicatedWorker`).
+> Functions and variables defined in the worker file where `registerWorker` is called **cannot** be directly imported into the main thread. If you need a function to be used directly by both threads, define it in a separate module and import it into the worker file.
 
 ```ts
 registerWorker(functionsObject);
@@ -119,6 +110,8 @@ new ElasticWorker(url, options);
 **Example (ESM):**
 
 ```ts
+import { ElasticWorker } from "elastic-worker";
+
 const workerUrl = new URL("./worker.ts", import.meta.url);
 const elasticWorker = new ElasticWorker(workerUrl, {
   minWorkers: 2,
@@ -131,8 +124,9 @@ const elasticWorker = new ElasticWorker(workerUrl, {
 **Example (CJS):**
 
 ```ts
-import path from "path";
-import { pathToFileURL } from "url";
+const { ElasticWorker } = require("elastic-worker");
+const { pathToFileURL } = require("url");
+const path = require("path");
 
 const workerUrl = pathToFileURL(path.resolve("./worker.js"));
 const elasticWorker = new ElasticWorker(workerUrl);
@@ -181,87 +175,72 @@ Use this if you’re finished with the worker pool.
 await elasticWorker.terminate();
 ```
 
-## DedicatedWorker
+## Transfer
 
-A `DedicatedWorker` runs in a **single worker thread**.  
-Unlike `ElasticWorker`, it can maintain **internal state** across calls, but state is lost if the worker crashes or is terminated.
+The `Transfer` class provides a clean way to send [Transferable Objects](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Transferable_objects) between threads. Instead of passing a separate transfer list as a second parameter (like in `postMessage`), `Transfer` wraps both your data and its transferable references in a single object—keeping worker function signatures simple and consistent.
 
-### Constructor
+> [!NOTE]
+> You don't need to use Transfer unless you are trying to transfer large data to worker thread.
 
-```ts
-new DedicatedWorker(url, options);
-```
+### Usage
 
-- `url` — URL to the worker file
-- `options`:
-  - `maxQueueSize` (default: `Infinity`) — Max queued tasks
+- To send a `Transferable Object` back from the worker, return a `Transfer` object with `Transferable Object` inside.
+- Access the wrapped data via the `value` property of the `Transfer` instance.
 
-### Properties
+### Rules
 
-- **busy** _(read-only)_ — Worker is currently executing a task
-- **queue** _(read-only)_ — Pending tasks
-- **isTerminated** _(read-only)_ — Worker termination status
-
-### Methods
-
-#### `func`
-
-Creates a callable function mapped to a worker function.
-
-```ts
-const add = dedicatedWorker.func("add");
-```
-
-#### `terminate`
-
-Stops the worker and clears queued tasks.
-
-```ts
-await dedicatedWorker.terminate();
-```
-
-#### `respawn`
-
-Restarts a terminated worker.
-
-```ts
-dedicatedWorker.respawn();
-```
+- All parameters must be wrapped inside a `Transfer` object.
+- A worker function can accept **only one parameter**, and it must be a `Transfer` instance.
 
 ### Example
 
-**worker.ts**
+#### main.ts
 
 ```ts
-import { registerWorker } from "elastic-worker";
+const processLargeData = elasticWorker.func("processLargeData");
 
-export class Calculator {
-  result: number;
+const largeData = new ArrayBuffer(8);
+const t = new Transfer(largeData, [largeData]);
 
-  add = (a, b) => (this.result = a + b);
-  sub = (a, b) => (this.result = a - b);
-  lastResult = () => this.result;
-}
-
-const calculator = new Calculator();
-registerWorker(calculator);
+const result = await processLargeData(t);
+console.log("result", result.value);
 ```
 
-**main.ts**
+#### worker.ts
 
 ```ts
-import { DedicatedWorker } from "elastic-worker";
-import type { Calculator } from "./worker.ts";
+const processLargeData = (t: Transfer) => {
+  const largeData = t.value;
+  return new Transfer(largeData, [largeData]);
+};
 
-const workerUrl = new URL("./worker.ts", import.meta.url);
-const dedicatedWorker = new DedicatedWorker(workerUrl);
-
-const add = dedicatedWorker.func("add");
-const lastResult = dedicatedWorker.func("lastResult");
-
-await add(10, 20);
-console.log(await lastResult()); // 30
+registerWorker({ processLargeData });
 ```
+
+---
+
+### Constructor
+
+The `Transfer` constructor takes two parameters:
+
+1. **value** — Any data you want to send (can include `Transferable` objects).
+2. **transferList** — An array of `Transferable` objects that should be transferred, similar to the second argument in `postMessage`.
+
+```ts
+const buffer1 = new ArrayBuffer(8);
+const buffer2 = new ArrayBuffer(16);
+
+const transfer = new Transfer(
+  { buffer1, buffer2, num: 1, str: "hello world" },
+  [buffer1, buffer2]
+);
+```
+
+---
+
+### Properties
+
+- **`value`** — The actual data being transferred between the main and worker threads.
 
 ## Errors
 
@@ -273,16 +252,12 @@ console.log(await lastResult()); // 30
 
 ## Benchmark
 
-Comparison of **main thread**, **ElasticWorker**, and **DedicatedWorker** (Fibonacci benchmark).
+Comparison of **main thread** and **ElasticWorker** (Fibonacci benchmark).
 
 ```log
 Main thread:     597.24 ms
-Elastic worker:   81.62 ms
-Dedicated worker: 605.02 ms
+Elastic worker:   81.62 ms (~7.3x faster)
 ```
-
-- **Elastic vs Main** → ~7.3× faster
-- **Dedicated vs Main** → ~1.3% slower (but non-blocking)
 
 Benchmark may vary depending on the number of threads allowed and the type of task being executed.
 See [`examples/js/benchmark.js`](./examples/js/benchmark.js) for details.
