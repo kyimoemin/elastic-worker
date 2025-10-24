@@ -1,5 +1,5 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
-import { getUUID, UniversalWorker } from "#env-adapter";
+import { getUUID } from "#env-adapter";
 import {
   AbortedError,
   QueueOverflowError,
@@ -7,9 +7,9 @@ import {
   WorkerTerminatedError,
 } from "./errors";
 import type {
-  PendingCall,
   FuncOptions,
   FunctionsRecord,
+  PendingCall,
   ResponsePayload,
   UniversalWorkerInterface,
   WorkerProxy,
@@ -17,7 +17,7 @@ import type {
 import { combineSignals } from "./utils/abort-signal";
 import { Queue } from "./utils/queue";
 import { getReadonlyProxy } from "./utils/readonly-proxy";
-import { convertToTransfer, isTransfer, Transfer } from "./utils/transfer";
+import { convertToTransfer, Transfer } from "./utils/transfer";
 import { WorkerPool } from "./utils/worker-pool";
 
 type MessageListenerParam = {
@@ -36,8 +36,7 @@ export type ElasticWorkerOptions = {
 /**
  * A generic handler for making asynchronous function calls to a Worker.
  *
- * This class manages communication between the main thread and a worker, allowing you to call worker-exposed functions as Promises.
- * It handles message passing, result/error propagation, timeouts, and worker cleanup.
+ * `ElasticWorker` manages communication between the main thread and a worker, allowing you to call worker-exposed functions as Promises.
  *
  * @template T - The type describing the functions exposed by the worker (should extend FunctionsRecord).
  *

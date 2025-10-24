@@ -8,6 +8,13 @@ import alias from "@rollup/plugin-alias";
 
 const input = "src/index.ts";
 
+/**
+ *
+ * @param {object} param0 config
+ * @param {"browser"|"node"} param0.env env target
+ * @param {"esm"|"cjs"} param0.format module format
+ * @returns
+ */
 const mkJsBuild = ({ env, format }) => ({
   input,
   output: {

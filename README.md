@@ -180,7 +180,7 @@ await elasticWorker.terminate();
 The `Transfer` class provides a clean way to send [Transferable Objects](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Transferable_objects) between threads. Instead of passing a separate transfer list as a second parameter (like in `postMessage`), `Transfer` wraps both your data and its transferable references in a single object—keeping worker function signatures simple and consistent.
 
 > [!NOTE]
-> You don't need to use Transfer unless you are trying to transfer large data to worker thread.
+> You don't need to use `Transfer` unless you are trying to transfer large data to worker thread.
 
 ### Usage
 

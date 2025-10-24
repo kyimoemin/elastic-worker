@@ -5,7 +5,7 @@
 - [x] rename initWorker to registerWorker
 - [x] rename package
 
-## next version
+## 1.4.0
 
 - [x] add transferList option
   - [x] main thread to worker
@@ -14,6 +14,6 @@
 - [x] add doc for transferable
 - [x] add example for transferable
 
-## next version 2.0.0
+## 2.0.0
 
-- [ ] remove dedicated worker
+- [x] remove dedicated worker
