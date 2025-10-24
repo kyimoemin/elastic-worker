@@ -11,6 +11,7 @@
 - [Quick Start](#quick-start)
 - [registerWorker](#registerworker)
 - [ElasticWorker](#elasticworker)
+- [Transfer](#transfer)
 - [Errors](#errors)
 - [Benchmark](#benchmark)
 - [License](#license)
@@ -25,6 +26,7 @@ This package exports:
 
 - [`registerWorker`](#registerworker) — register functions inside a worker context
 - [`ElasticWorker`](#elasticworker) — scalable worker pool for parallel execution
+- [`Transfer`](#transfer) - a class to use for passing transferable objects
 
 ## Installation
 
@@ -85,8 +87,7 @@ main.ts  →  ElasticWorker  →  worker.ts (your functions)
 Registers functions inside a worker context.
 
 > [!CAUTION]  
-> Functions and variables defined in the worker file where `registerWorker` is called **cannot** be directly imported into the main thread.  
-> They must be accessed through an `ElasticWorker`.
+> Functions and variables defined in the worker file where `registerWorker` is called **cannot** be directly imported into the main thread. If you need a function to be used directly by both threads, define it in a separate module and import it into the worker file.
 
 ```ts
 registerWorker(functionsObject);
@@ -173,6 +174,73 @@ Use this if you’re finished with the worker pool.
 ```ts
 await elasticWorker.terminate();
 ```
+
+## Transfer
+
+The `Transfer` class provides a clean way to send [Transferable Objects](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Transferable_objects) between threads. Instead of passing a separate transfer list as a second parameter (like in `postMessage`), `Transfer` wraps both your data and its transferable references in a single object—keeping worker function signatures simple and consistent.
+
+> [!NOTE]
+> You don't need to use Transfer unless you are trying to transfer large data to worker thread.
+
+### Usage
+
+- To send a `Transferable Object` back from the worker, return a `Transfer` object with `Transferable Object` inside.
+- Access the wrapped data via the `value` property of the `Transfer` instance.
+
+### Rules
+
+- All parameters must be wrapped inside a `Transfer` object.
+- A worker function can accept **only one parameter**, and it must be a `Transfer` instance.
+
+### Example
+
+#### main.ts
+
+```ts
+const processLargeData = elasticWorker.func("processLargeData");
+
+const largeData = new ArrayBuffer(8);
+const t = new Transfer(largeData, [largeData]);
+
+const result = await processLargeData(t);
+console.log("result", result.value);
+```
+
+#### worker.ts
+
+```ts
+const processLargeData = (t: Transfer) => {
+  const largeData = t.value;
+  return new Transfer(largeData, [largeData]);
+};
+
+registerWorker({ processLargeData });
+```
+
+---
+
+### Constructor
+
+The `Transfer` constructor takes two parameters:
+
+1. **value** — Any data you want to send (can include `Transferable` objects).
+2. **transferList** — An array of `Transferable` objects that should be transferred, similar to the second argument in `postMessage`.
+
+```ts
+const buffer1 = new ArrayBuffer(8);
+const buffer2 = new ArrayBuffer(16);
+
+const transfer = new Transfer(
+  { buffer1, buffer2, num: 1, str: "hello world" },
+  [buffer1, buffer2]
+);
+```
+
+---
+
+### Properties
+
+- **`value`** — The actual data being transferred between the main and worker threads.
 
 ## Errors
 
