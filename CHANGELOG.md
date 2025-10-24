@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 1.3.4
+## 1.4.0
 
 - added `Transfer` class, support for [Transferable Objects](https://developer.mozilla.org/en-US/docs/Web/API/Web_Workers_API/Transferable_objects)
 - soft remove DedicatedWorker class
