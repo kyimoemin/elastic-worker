@@ -13,3 +13,4 @@
 - [x] remove dedicated worker from the doc
 - [ ] add doc for transferable
 - [ ] add example for transferable
+- [ ] remove dedicated worker
