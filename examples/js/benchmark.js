@@ -3,8 +3,8 @@ import { fibonacci } from "./fibonacci.js";
 const workerURL = new URL("./worker.js", import.meta.url);
 
 const elasticWorker = new ElasticWorker(workerURL, {
-  minWorkers: 4,
-  maxWorkers: 8,
+  minWorkers: 1,
+  maxWorkers: 4,
 });
 
 const FIBONACCI_NUM = 30;
@@ -59,6 +59,11 @@ async function main() {
     elasticWorker.func("fibonacci")(FIBONACCI_NUM).catch(console.error)
   );
   console.log(`Elastic worker: ${elasticWorkerTime.toFixed(2)} ms`);
+  console.log(
+    "difference:",
+    (mainThreadTime / elasticWorkerTime).toFixed(2),
+    "x faster"
+  );
 }
 
 main();

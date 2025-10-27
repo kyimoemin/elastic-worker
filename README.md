@@ -44,6 +44,10 @@ src/
  main.ts
 ```
 
+> [!NOTE]  
+> The examples are written in TypeScript to demonstrate type usage, but you can also use JavaScript.  
+> Both JavaScript and TypeScript examples are provided in [examples](#examples).
+
 #### 1. Define worker functions (`worker.ts`)
 
 ```ts
@@ -246,17 +250,24 @@ const transfer = new Transfer(
 - **WorkerTerminatedError** — Worker was terminated
 - **FunctionNotFoundError** — Function not registered in worker
 
-## Benchmark
-
-Comparison of **main thread** and **ElasticWorker** (Fibonacci benchmark).
+### Benchmark: Main Thread vs ElasticWorker (Fibonacci Example)
 
 ```log
-Main thread:     597.24 ms
-Elastic worker:   81.62 ms (~7.3x faster)
+
+Main thread:              596.17 ms
+Elastic worker(4 worker): 156.19 ms (~3.82 x faster)
 ```
 
-Benchmark may vary depending on the number of threads allowed and the type of task being executed.
-See [`examples/js/benchmark.js`](./examples/js/benchmark.js) for details.
+The benchmark results can vary significantly based on the number of worker threads (`maxWorker`) and the computational intensity of the task.
+
+- For **CPU-intensive tasks** (like Fibonacci or large data processing), increasing `maxWorker` generally provides near-linear performance gains — e.g., `maxWorker: 2` ≈ 2× faster, `maxWorker: 4` ≈ 4× faster.
+- For **lightweight or I/O-bound tasks**, scaling may be less efficient — even with `maxWorker: 8`, the speedup might be closer to ~5× depending on how much real computation is involved.
+
+See [examples/js/benchmark.js](./examples/js/benchmark.js) try it yourself.
+
+## Examples
+
+Here are [javascript](./examples/js/elastic-worker.js) and [typescript](./examples/ts/elastic-worker.ts) examples.
 
 ## License
 
