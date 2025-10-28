@@ -47,13 +47,13 @@ export class ElasticWorker<T extends FunctionsRecord>
   implements WorkerProxy<T>
 {
   private readonly workerPool: WorkerPool;
-  private readonly calls: Queue<PendingCall>;
+  private readonly tasks: Queue<PendingCall>;
 
   /**
    * > [!CAUTION]
    * > This property is for debugging purposes only. do not modify or use it to manage the queue.
    *
-   * queue of pending calls (read-only)
+   * queue of pending tasks (read-only)
    */
   readonly queue: Queue<PendingCall>;
 
@@ -93,8 +93,8 @@ export class ElasticWorker<T extends FunctionsRecord>
       terminateIdleDelay,
     });
     this.maxQueueSize = maxQueueSize;
-    this.calls = new Queue<PendingCall>(maxQueueSize);
-    this.queue = getReadonlyProxy(this.calls);
+    this.tasks = new Queue<PendingCall>(maxQueueSize);
+    this.queue = getReadonlyProxy(this.tasks);
   }
 
   private messageListener({ worker, resolve, reject }: MessageListenerParam) {
@@ -119,14 +119,14 @@ export class ElasticWorker<T extends FunctionsRecord>
   }
 
   private executeNextCall = () => {
-    if (this.calls.size > 0) {
-      const call = this.calls.dequeue();
+    if (this.tasks.size > 0) {
+      const call = this.tasks.dequeue();
       if (call) this.executeCall(call);
     }
   };
 
   /**
-   * Returns a function that calls a method in the worker asynchronously with optional timeout.
+   * Returns a function that executes a function in the worker asynchronously with optional timeout.
    *
    * @template K - The key of the function in the worker object.
    * @param funcName - The name of the function to call in the worker.
@@ -172,10 +172,10 @@ export class ElasticWorker<T extends FunctionsRecord>
      * no worker available (all busy and reached maxWorkers)
      */
     if (!worker) {
-      if (this.calls.size >= this.maxQueueSize) {
+      if (this.tasks.size >= this.maxQueueSize) {
         return reject(new QueueOverflowError(this.maxQueueSize));
       } else
-        this.calls.enqueue({
+        this.tasks.enqueue({
           resolve,
           reject,
           func,
@@ -227,17 +227,17 @@ export class ElasticWorker<T extends FunctionsRecord>
   };
   /**
    * > [!CAUTION]
-   * > Keep in mind that this will stop all workers including the workers with ongoing calls.
+   * > Keep in mind that this will stop all workers including the workers with ongoing tasks.
    *
-   * Terminates the worker and cleans up all pending calls.
-   * This method removes all event listeners and clears the calls queue.
+   * Terminates the worker and cleans up all pending tasks.
+   * This method removes all event listeners and clears the tasks queue.
    *
    */
   terminate = () => {
-    for (const { reject } of this.calls.values()) {
+    for (const { reject } of this.tasks.values()) {
       reject(new WorkerTerminatedError());
     }
-    this.calls.clear();
+    this.tasks.clear();
     this.workerPool.terminateAllWorkers();
   };
 }
