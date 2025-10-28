@@ -11,9 +11,9 @@ export function combineSignals({
   signal?: AbortSignal | undefined;
   timeoutMs: number;
 }) {
-  if (!timeoutMs || timeoutMs <= 0)
+  if (!timeoutMs || timeoutMs <= 0 || timeoutMs === Infinity)
     throw new Error(
-      `Invalid timeoutMs: ${timeoutMs}. Please use Infinity or a positive number.`
+      `Invalid timeoutMs: ${timeoutMs}. Non-positive or Infinity values are not allowed. Please use a positive number.`
     );
   const signals = [];
   if (signal) signals.push(signal);

@@ -30,7 +30,11 @@ export type ElasticWorkerOptions = {
   minWorkers: number; // minimum number of workers to keep alive
   maxWorkers: number; // maximum number of worker allowed
   maxQueueSize?: number; // maximum number of tasks to queue
-  terminateIdleDelay?: number; // time in ms to terminate idle workers above minWorkers
+  idleDelay?: number; // time in ms to terminate idle workers above minWorkers
+  /**
+   * @deprecated use `idleDelay` instead
+   */
+  terminateIdleDelay?: number;
 };
 
 /**
@@ -76,7 +80,7 @@ export class ElasticWorker<T extends FunctionsRecord>
    * @param {number} options.minWorkers Minimum number of idle workers to keep alive (default: 1)
    * @param {number} options.maxWorkers Maximum number of busy workers allowed. (default: 4)
    * @param {number} options.maxQueueSize Maximum number of tasks to queue (default: Infinity)
-   * @param {number} options.terminateIdleDelay Delay in milliseconds before terminating an idle worker (default: 500ms)
+   * @param {number} options.idleDelay Time in milliseconds before an idle worker is terminated (default: 500ms)
    */
   constructor(
     workerURL: URL,
@@ -84,13 +88,14 @@ export class ElasticWorker<T extends FunctionsRecord>
       minWorkers = 1,
       maxWorkers = 4,
       maxQueueSize = Infinity,
-      terminateIdleDelay = 500,
+      idleDelay,
+      terminateIdleDelay,
     }: Partial<ElasticWorkerOptions> = {}
   ) {
     this.workerPool = new WorkerPool(workerURL, {
       minPoolSize: minWorkers,
       maxPoolSize: maxWorkers,
-      terminateIdleDelay,
+      idleDelay: idleDelay ?? terminateIdleDelay ?? 500,
     });
     this.maxQueueSize = maxQueueSize;
     this.tasks = new Queue<PendingTask>(maxQueueSize);

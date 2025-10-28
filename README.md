@@ -121,7 +121,7 @@ const elasticWorker = new ElasticWorker(workerUrl, {
   minWorkers: 2,
   maxWorkers: 4,
   maxQueueSize: 1000,
-  terminateIdleDelay: 1000,
+  idleDelay: 1000,
 });
 ```
 
@@ -141,7 +141,7 @@ const elasticWorker = new ElasticWorker(workerUrl);
 - **minWorkers** (default: `1`) — Minimum idle workers to keep alive, prevents cold starts.
 - **maxWorkers** (default: `4`) — Maximum worker instances allowed.
 - **maxQueueSize** (default: `Infinity`) — Maximum tasks queued while workers are busy.
-- **terminateIdleDelay** (default: `500` ms) — Idle timeout before terminating extra workers.
+- **idleDelay** (default: `500` ms) — Time in milliseconds before an idle worker is terminated.
 
 ### Properties
 

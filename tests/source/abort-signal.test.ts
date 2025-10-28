@@ -9,7 +9,9 @@ function createAbortSignal() {
 
 describe("combineSignals", () => {
   it("returns undefined if no signal and timeoutMs is Infinity", () => {
-    expect(combineSignals({ timeoutMs: Infinity })).toBeUndefined();
+    expect(() => combineSignals({ timeoutMs: Infinity })).toThrowError(
+      "Invalid timeoutMs: Infinity. Non-positive or Infinity values are not allowed. Please use a positive number."
+    );
   });
 
   it("throws error for invalid timeoutMs", () => {
@@ -19,7 +21,7 @@ describe("combineSignals", () => {
 
   it("returns a combined signal if signal is provided", () => {
     const { signal } = createAbortSignal();
-    const combined = combineSignals({ signal, timeoutMs: Infinity });
+    const combined = combineSignals({ signal, timeoutMs: 100 });
     expect(combined).toBeInstanceOf(AbortSignal);
   });
 
