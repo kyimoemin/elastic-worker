@@ -229,7 +229,7 @@ export class ElasticWorker<T extends FunctionsRecord>
    * > [!CAUTION]
    * > Keep in mind that this will stop all workers including the workers with ongoing tasks.
    *
-   * Terminates the worker and cleans up all pending tasks.
+   * Terminates all workers and cleans up all pending tasks.
    * This method removes all event listeners and clears the tasks queue.
    *
    */

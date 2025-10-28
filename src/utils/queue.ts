@@ -37,11 +37,6 @@ export class Queue<T> {
     this.resetCounters();
     return item;
   };
-
-  peek = (): T | undefined => {
-    return this.items.get(this.head);
-  };
-
   values = (): IterableIterator<T> => {
     return this.items.values();
   };
