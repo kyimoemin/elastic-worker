@@ -9,7 +9,7 @@ import {
 import type {
   FuncOptions,
   FunctionsRecord,
-  PendingCall,
+  PendingTask,
   ResponsePayload,
   UniversalWorkerInterface,
   WorkerProxy,
@@ -40,14 +40,14 @@ export type ElasticWorkerOptions = {
  *
  * @template T - The type describing the functions exposed by the worker (should extend FunctionsRecord).
  *
- * @see func for calling worker functions
+ * @see func get worker functions
  * @see terminate for cleanup
  */
 export class ElasticWorker<T extends FunctionsRecord>
   implements WorkerProxy<T>
 {
   private readonly workerPool: WorkerPool;
-  private readonly tasks: Queue<PendingCall>;
+  private readonly tasks: Queue<PendingTask>;
 
   /**
    * > [!CAUTION]
@@ -55,7 +55,7 @@ export class ElasticWorker<T extends FunctionsRecord>
    *
    * queue of pending tasks (read-only)
    */
-  readonly queue: Queue<PendingCall>;
+  readonly queue: Queue<PendingTask>;
 
   private readonly maxQueueSize: number;
 
@@ -93,7 +93,7 @@ export class ElasticWorker<T extends FunctionsRecord>
       terminateIdleDelay,
     });
     this.maxQueueSize = maxQueueSize;
-    this.tasks = new Queue<PendingCall>(maxQueueSize);
+    this.tasks = new Queue<PendingTask>(maxQueueSize);
     this.queue = getReadonlyProxy(this.tasks);
   }
 
@@ -108,20 +108,14 @@ export class ElasticWorker<T extends FunctionsRecord>
       } else {
         resolve(convertToTransfer(result) ?? result);
       }
-      /**
-       * todo :
-       * check if there is any pending call in the queue,
-       * if yes, pick the first one and execute it
-       * else mark the worker as idle
-       */
       return this.workerPool.releaseWorker(worker);
     };
   }
 
-  private executeNextCall = () => {
+  private executeNextTask = () => {
     if (this.tasks.size > 0) {
-      const call = this.tasks.dequeue();
-      if (call) this.executeCall(call);
+      const task = this.tasks.dequeue();
+      if (task) this.executeTask(task);
     }
   };
 
@@ -129,11 +123,11 @@ export class ElasticWorker<T extends FunctionsRecord>
    * Returns a function that executes a function in the worker asynchronously with optional timeout.
    *
    * @template K - The key of the function in the worker object.
-   * @param funcName - The name of the function to call in the worker.
-   * @param {object} options - Optional configuration for the function call.
+   * @param funcName - The name of the function to be called in the worker.
+   * @param {object} options - Optional configuration for the function.
    * @param {number} options.timeoutMs - Optional timeout in milliseconds (default: 5000ms).
    * @param {AbortSignal} options.signal - Optional AbortSignal to cancel the request.
-   * @returns A function that, when called with arguments, returns a Promise resolving to the result of the worker function.
+   * @returns A function that returns a Promise resolving to the result of the worker function.
    *
    * @example
    * const add = workerProxy.func('add');
@@ -147,7 +141,7 @@ export class ElasticWorker<T extends FunctionsRecord>
     (...args: Parameters<T[K]>) => {
       const signals = combineSignals({ signal, timeoutMs });
       return new Promise<ReturnType<T[K]>>((resolve, reject) => {
-        this.executeCall({
+        this.executeTask({
           resolve,
           reject,
           func: funcName as string,
@@ -158,14 +152,14 @@ export class ElasticWorker<T extends FunctionsRecord>
       });
     };
 
-  private executeCall = ({
+  private executeTask = ({
     args,
     func,
     id,
     reject,
     resolve,
     signal,
-  }: PendingCall) => {
+  }: PendingTask) => {
     const worker = this.workerPool.getWorker();
 
     /**
@@ -201,7 +195,7 @@ export class ElasticWorker<T extends FunctionsRecord>
           resolve,
           reject,
         })(message);
-        this.executeNextCall();
+        this.executeNextTask();
       };
       worker.onerror = async (error) => {
         reject(error);
@@ -210,7 +204,7 @@ export class ElasticWorker<T extends FunctionsRecord>
         if (this.workerPool.pool.size < this.workerPool.minPoolSize) {
           const worker = this.workerPool.getWorker();
           await this.workerPool.releaseWorker(worker!);
-          this.executeNextCall();
+          this.executeNextTask();
         }
       };
       worker.onexit = () => reject(new WorkerTerminatedError());
