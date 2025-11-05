@@ -5,7 +5,7 @@ import { UniversalWorkerInterface } from "../types";
 export type WorkerPoolOptions = {
   minPoolSize: number;
   maxPoolSize: number;
-  terminateIdleDelay?: number;
+  idleDelay?: number;
 };
 
 /**
@@ -17,7 +17,7 @@ export class WorkerPool {
   public readonly minPoolSize: number;
   public readonly maxPoolSize: number;
 
-  public readonly terminateIdleDelay: number;
+  public readonly idleDelay: number;
 
   private workers: Map<UniversalWorkerInterface, WorkerInfo> = new Map();
 
@@ -39,16 +39,16 @@ export class WorkerPool {
    * @param {object} options Configuration options for the worker pool.
    * @param {number} options.minPoolSize Minimum number of idle workers to keep alive
    * @param {number} options.maxPoolSize Maximum number of busy workers allowed.
-   * @param {number} options.terminateIdleDelay Delay in milliseconds before terminating an idle worker (default: 500ms)
+   * @param {number} options.idleDelay Time in milliseconds before an idle worker is terminated (default: 500ms)
    */
   constructor(
     workerURL: URL,
-    { minPoolSize, maxPoolSize, terminateIdleDelay = 500 }: WorkerPoolOptions
+    { minPoolSize, maxPoolSize, idleDelay = 500 }: WorkerPoolOptions
   ) {
     this.workerURL = workerURL;
     this.minPoolSize = minPoolSize;
     this.maxPoolSize = maxPoolSize;
-    this.terminateIdleDelay = terminateIdleDelay;
+    this.idleDelay = idleDelay;
     this.spawnInitialWorkers();
   }
 
@@ -136,7 +136,7 @@ export class WorkerPool {
         workerInfo.timeoutId = setTimeout(() => {
           this.workers.delete(workerInfo.worker);
           workerInfo.worker.terminate();
-        }, this.terminateIdleDelay);
+        }, this.idleDelay);
         break;
       }
     }

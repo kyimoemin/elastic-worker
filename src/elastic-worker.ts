@@ -9,7 +9,7 @@ import {
 import type {
   FuncOptions,
   FunctionsRecord,
-  PendingCall,
+  PendingTask,
   ResponsePayload,
   UniversalWorkerInterface,
   WorkerProxy,
@@ -30,7 +30,11 @@ export type ElasticWorkerOptions = {
   minWorkers: number; // minimum number of workers to keep alive
   maxWorkers: number; // maximum number of worker allowed
   maxQueueSize?: number; // maximum number of tasks to queue
-  terminateIdleDelay?: number; // time in ms to terminate idle workers above minWorkers
+  idleDelay?: number; // time in ms to terminate idle workers above minWorkers
+  /**
+   * @deprecated use `idleDelay` instead
+   */
+  terminateIdleDelay?: number;
 };
 
 /**
@@ -40,22 +44,22 @@ export type ElasticWorkerOptions = {
  *
  * @template T - The type describing the functions exposed by the worker (should extend FunctionsRecord).
  *
- * @see func for calling worker functions
+ * @see func get worker functions
  * @see terminate for cleanup
  */
 export class ElasticWorker<T extends FunctionsRecord>
   implements WorkerProxy<T>
 {
   private readonly workerPool: WorkerPool;
-  private readonly calls: Queue<PendingCall>;
+  private readonly tasks: Queue<PendingTask>;
 
   /**
    * > [!CAUTION]
    * > This property is for debugging purposes only. do not modify or use it to manage the queue.
    *
-   * queue of pending calls (read-only)
+   * queue of pending tasks (read-only)
    */
-  readonly queue: Queue<PendingCall>;
+  readonly queue: Queue<PendingTask>;
 
   private readonly maxQueueSize: number;
 
@@ -76,7 +80,7 @@ export class ElasticWorker<T extends FunctionsRecord>
    * @param {number} options.minWorkers Minimum number of idle workers to keep alive (default: 1)
    * @param {number} options.maxWorkers Maximum number of busy workers allowed. (default: 4)
    * @param {number} options.maxQueueSize Maximum number of tasks to queue (default: Infinity)
-   * @param {number} options.terminateIdleDelay Delay in milliseconds before terminating an idle worker (default: 500ms)
+   * @param {number} options.idleDelay Time in milliseconds before an idle worker is terminated (default: 500ms)
    */
   constructor(
     workerURL: URL,
@@ -84,17 +88,18 @@ export class ElasticWorker<T extends FunctionsRecord>
       minWorkers = 1,
       maxWorkers = 4,
       maxQueueSize = Infinity,
-      terminateIdleDelay = 500,
+      idleDelay,
+      terminateIdleDelay,
     }: Partial<ElasticWorkerOptions> = {}
   ) {
     this.workerPool = new WorkerPool(workerURL, {
       minPoolSize: minWorkers,
       maxPoolSize: maxWorkers,
-      terminateIdleDelay,
+      idleDelay: idleDelay ?? terminateIdleDelay ?? 500,
     });
     this.maxQueueSize = maxQueueSize;
-    this.calls = new Queue<PendingCall>(maxQueueSize);
-    this.queue = getReadonlyProxy(this.calls);
+    this.tasks = new Queue<PendingTask>(maxQueueSize);
+    this.queue = getReadonlyProxy(this.tasks);
   }
 
   private messageListener({ worker, resolve, reject }: MessageListenerParam) {
@@ -108,32 +113,26 @@ export class ElasticWorker<T extends FunctionsRecord>
       } else {
         resolve(convertToTransfer(result) ?? result);
       }
-      /**
-       * todo :
-       * check if there is any pending call in the queue,
-       * if yes, pick the first one and execute it
-       * else mark the worker as idle
-       */
       return this.workerPool.releaseWorker(worker);
     };
   }
 
-  private executeNextCall = () => {
-    if (this.calls.size > 0) {
-      const call = this.calls.dequeue();
-      if (call) this.executeCall(call);
+  private executeNextTask = () => {
+    if (this.tasks.size > 0) {
+      const task = this.tasks.dequeue();
+      if (task) this.executeTask(task);
     }
   };
 
   /**
-   * Returns a function that calls a method in the worker asynchronously with optional timeout.
+   * Returns a function that executes a function in the worker asynchronously with optional timeout.
    *
    * @template K - The key of the function in the worker object.
-   * @param funcName - The name of the function to call in the worker.
-   * @param {object} options - Optional configuration for the function call.
+   * @param funcName - The name of the function to be called in the worker.
+   * @param {object} options - Optional configuration for the function.
    * @param {number} options.timeoutMs - Optional timeout in milliseconds (default: 5000ms).
    * @param {AbortSignal} options.signal - Optional AbortSignal to cancel the request.
-   * @returns A function that, when called with arguments, returns a Promise resolving to the result of the worker function.
+   * @returns A function that returns a Promise resolving to the result of the worker function.
    *
    * @example
    * const add = workerProxy.func('add');
@@ -147,7 +146,7 @@ export class ElasticWorker<T extends FunctionsRecord>
     (...args: Parameters<T[K]>) => {
       const signals = combineSignals({ signal, timeoutMs });
       return new Promise<ReturnType<T[K]>>((resolve, reject) => {
-        this.executeCall({
+        this.executeTask({
           resolve,
           reject,
           func: funcName as string,
@@ -158,24 +157,24 @@ export class ElasticWorker<T extends FunctionsRecord>
       });
     };
 
-  private executeCall = ({
+  private executeTask = ({
     args,
     func,
     id,
     reject,
     resolve,
     signal,
-  }: PendingCall) => {
+  }: PendingTask) => {
     const worker = this.workerPool.getWorker();
 
     /**
      * no worker available (all busy and reached maxWorkers)
      */
     if (!worker) {
-      if (this.calls.size >= this.maxQueueSize) {
+      if (this.tasks.size >= this.maxQueueSize) {
         return reject(new QueueOverflowError(this.maxQueueSize));
       } else
-        this.calls.enqueue({
+        this.tasks.enqueue({
           resolve,
           reject,
           func,
@@ -201,7 +200,7 @@ export class ElasticWorker<T extends FunctionsRecord>
           resolve,
           reject,
         })(message);
-        this.executeNextCall();
+        this.executeNextTask();
       };
       worker.onerror = async (error) => {
         reject(error);
@@ -210,7 +209,7 @@ export class ElasticWorker<T extends FunctionsRecord>
         if (this.workerPool.pool.size < this.workerPool.minPoolSize) {
           const worker = this.workerPool.getWorker();
           await this.workerPool.releaseWorker(worker!);
-          this.executeNextCall();
+          this.executeNextTask();
         }
       };
       worker.onexit = () => reject(new WorkerTerminatedError());
@@ -227,17 +226,17 @@ export class ElasticWorker<T extends FunctionsRecord>
   };
   /**
    * > [!CAUTION]
-   * > Keep in mind that this will stop all workers including the workers with ongoing calls.
+   * > Keep in mind that this will stop all workers including the workers with ongoing tasks.
    *
-   * Terminates the worker and cleans up all pending calls.
-   * This method removes all event listeners and clears the calls queue.
+   * Terminates all workers and cleans up all pending tasks.
+   * This method removes all event listeners and clears the tasks queue.
    *
    */
   terminate = () => {
-    for (const { reject } of this.calls.values()) {
+    for (const { reject } of this.tasks.values()) {
       reject(new WorkerTerminatedError());
     }
-    this.calls.clear();
+    this.tasks.clear();
     this.workerPool.terminateAllWorkers();
   };
 }

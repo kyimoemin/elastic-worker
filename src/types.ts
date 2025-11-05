@@ -1,6 +1,6 @@
 export type FunctionsRecord = Record<string, any>;
 
-export type PendingCall = {
+export type PendingTask = {
   resolve: (result?: any) => void;
   reject: (error: Error) => void;
   func: string;
