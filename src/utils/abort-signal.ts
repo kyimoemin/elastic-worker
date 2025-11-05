@@ -13,7 +13,7 @@ export function combineSignals({
 }) {
   if (!timeoutMs || timeoutMs <= 0 || timeoutMs === Infinity)
     throw new Error(
-      `Invalid timeoutMs: ${timeoutMs}. Non-positive or Infinity values are not allowed. Please use a positive number.`
+      `Invalid timeoutMs: ${timeoutMs}. Non-positive or Infinity values are not allowed.`
     );
   const signals = [];
   if (signal) signals.push(signal);
