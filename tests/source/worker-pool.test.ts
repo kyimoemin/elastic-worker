@@ -24,11 +24,11 @@ describe("WorkerPool", () => {
     workerPool = new WorkerPool(workerURL, {
       minPoolSize,
       maxPoolSize,
-      idleDelay: 1,
+      idleTimeout: 1,
     });
   });
-  it("should set idleDelay option", () => {
-    expect(workerPool.idleDelay).toBe(1);
+  it("should set idleTimeout option", () => {
+    expect(workerPool.idleTimeout).toBe(1);
   });
 
   it("should set and clear timeoutId for idle workers if there are more than minWorkers", async () => {

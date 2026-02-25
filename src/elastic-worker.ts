@@ -30,9 +30,9 @@ export type ElasticWorkerOptions = {
   minWorkers: number; // minimum number of workers to keep alive
   maxWorkers: number; // maximum number of worker allowed
   maxQueueSize?: number; // maximum number of tasks to queue
-  idleDelay?: number; // time in ms to terminate idle workers above minWorkers
+  idleTimeout?: number; // time in ms to terminate idle workers above minWorkers
   /**
-   * @deprecated use `idleDelay` instead
+   * @deprecated use `idleTimeout` instead
    */
   terminateIdleDelay?: number;
 };
@@ -47,9 +47,9 @@ export type ElasticWorkerOptions = {
  * @see func get worker functions
  * @see terminate for cleanup
  */
-export class ElasticWorker<T extends FunctionsRecord>
-  implements WorkerProxy<T>
-{
+export class ElasticWorker<
+  T extends FunctionsRecord,
+> implements WorkerProxy<T> {
   private readonly workerPool: WorkerPool;
   private readonly tasks: Queue<PendingTask>;
 
@@ -80,7 +80,7 @@ export class ElasticWorker<T extends FunctionsRecord>
    * @param {number} options.minWorkers Minimum number of idle workers to keep alive (default: 1)
    * @param {number} options.maxWorkers Maximum number of busy workers allowed. (default: 4)
    * @param {number} options.maxQueueSize Maximum number of tasks to queue (default: Infinity)
-   * @param {number} options.idleDelay Time in milliseconds before an idle worker is terminated (default: 500ms)
+   * @param {number} options.idleTimeout Time in milliseconds before an idle worker is terminated (default: 500ms)
    */
   constructor(
     workerURL: URL,
@@ -88,14 +88,14 @@ export class ElasticWorker<T extends FunctionsRecord>
       minWorkers = 1,
       maxWorkers = 4,
       maxQueueSize = Infinity,
-      idleDelay,
+      idleTimeout,
       terminateIdleDelay,
     }: Partial<ElasticWorkerOptions> = {}
   ) {
     this.workerPool = new WorkerPool(workerURL, {
       minPoolSize: minWorkers,
       maxPoolSize: maxWorkers,
-      idleDelay: idleDelay ?? terminateIdleDelay ?? 500,
+      idleTimeout: idleTimeout ?? terminateIdleDelay ?? 500,
     });
     this.maxQueueSize = maxQueueSize;
     this.tasks = new Queue<PendingTask>(maxQueueSize);

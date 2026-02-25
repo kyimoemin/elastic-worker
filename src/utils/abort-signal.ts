@@ -15,10 +15,7 @@ export function combineSignals({
     throw new Error(
       `Invalid timeoutMs: ${timeoutMs}. Non-positive or Infinity values are not allowed.`
     );
-  const signals = [];
+  const signals = [AbortSignal.timeout(timeoutMs)];
   if (signal) signals.push(signal);
-  if (timeoutMs !== Infinity) {
-    signals.push(AbortSignal.timeout(timeoutMs));
-  }
-  return signals.length > 0 ? AbortSignal.any(signals) : undefined;
+  return AbortSignal.any(signals);
 }

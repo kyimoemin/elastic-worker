@@ -20,5 +20,5 @@
 
 ## 2.0.2
 
-- [x] changed terminateIdleDelay to idleDelay
+- [x] changed terminateIdleDelay to idleTimeout
 - [x] stop allowing infinity timeout
