@@ -139,7 +139,7 @@ const elasticWorker = new ElasticWorker(workerUrl);
 ### Options
 
 - **minWorkers** (default: `1`) — Minimum idle workers to keep alive, prevents cold starts.
-- **maxWorkers** (default: `4`) — Maximum worker instances allowed.
+- **maxWorkers** (default: `2`) — Maximum worker instances allowed.
 - **maxTasks** (default: `Infinity`) — Maximum tasks allow for waiting while workers are busy.
 - **idleTimeout** (default: `500` ms) — Time in milliseconds before an idle worker is terminated.
 - **TaskStore** (default: `Queue`) — Custom task store constructor used to store pending tasks.
