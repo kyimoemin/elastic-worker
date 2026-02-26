@@ -1,12 +1,13 @@
 export type FunctionsRecord = Record<string, any>;
 
-export type PendingTask = {
+export type Task = {
   resolve: (result?: any) => void;
   reject: (error: Error) => void;
   func: string;
   id: string;
   args: any[];
   signal?: AbortSignal;
+  timeout: number;
 };
 
 export type RequestPayload<Params extends unknown[]> = {
@@ -70,3 +71,25 @@ export interface HostInterface {
  * @see {@link https://nodejs.org/api/worker_threads.html#portpostmessagevalue-transferlist | Node.js Transferable}
  */
 export type UniversalTransferable = any;
+
+export interface TaskStore {
+  readonly maxSize: number;
+
+  get count(): number;
+  /**
+   * add task to the store
+   */
+  push(item: Task): void;
+  /**
+   * removed task from the store and return removed task
+   */
+  pull(): Task | undefined;
+
+  all(): Iterable<Task>;
+
+  clear(): void;
+}
+
+export type TaskStoreConstructor<T extends TaskStore> = new (
+  maxSize: number
+) => T;

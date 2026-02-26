@@ -1,9 +1,16 @@
 # CHANGELOG
 
+## 3.0.0
+
+- removed `terminateIdleDelay` in favor of `idleTimeout`
+- removed `maxQueueSize` in favor of `maxTasks`
+- removed `QueueOverflowError` in favor of `TaskOverflowError`
+- added `TaskStore`
+
 ## 2.0.2
 
-- [x] deprecated `terminateIdleDelay` in favor of `idleTimeout`
-- [x] `idleTimeout` no longer accepts `0`, `Infinity`, or negative values.
+- deprecated `terminateIdleDelay` in favor of `idleTimeout`
+- `idleTimeout` no longer accepts `0`, `Infinity`, or negative values.
 
 ## 2.0.1
 

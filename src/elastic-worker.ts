@@ -2,15 +2,17 @@
 import { getUUID } from "#env-adapter";
 import {
   AbortedError,
-  QueueOverflowError,
+  TaskOverflowError,
   TimeoutError,
   WorkerTerminatedError,
 } from "./errors";
 import type {
   FuncOptions,
   FunctionsRecord,
-  PendingTask,
   ResponsePayload,
+  Task,
+  TaskStore,
+  TaskStoreConstructor,
   UniversalWorkerInterface,
   WorkerProxy,
 } from "./types";
@@ -26,15 +28,12 @@ type MessageListenerParam = {
   reject: (error: Error) => any;
 };
 
-export type ElasticWorkerOptions = {
-  minWorkers: number; // minimum number of workers to keep alive
-  maxWorkers: number; // maximum number of worker allowed
-  maxQueueSize?: number; // maximum number of tasks to queue
+export type ElasticWorkerOptions<T extends TaskStore = TaskStore> = {
+  minWorkers?: number; // minimum number of workers to keep alive
+  maxWorkers?: number; // maximum number of worker allowed
+  maxTasks?: number; // maximum number of tasks allowed
   idleTimeout?: number; // time in ms to terminate idle workers above minWorkers
-  /**
-   * @deprecated use `idleTimeout` instead
-   */
-  terminateIdleDelay?: number;
+  TaskStore?: TaskStoreConstructor<T>;
 };
 
 /**
@@ -51,17 +50,15 @@ export class ElasticWorker<
   T extends FunctionsRecord,
 > implements WorkerProxy<T> {
   private readonly workerPool: WorkerPool;
-  private readonly tasks: Queue<PendingTask>;
+  private readonly tasks: TaskStore;
 
   /**
-   * > [!CAUTION]
-   * > This property is for debugging purposes only. do not modify or use it to manage the queue.
-   *
-   * queue of pending tasks (read-only)
+   * **This property is for debugging purposes only. do not modify or use it to manage the tasks.**
+   * store of pending tasks (read-only)
    */
-  readonly queue: Queue<PendingTask>;
+  readonly taskStore: TaskStore;
 
-  private readonly maxQueueSize: number;
+  readonly maxTasks: number;
 
   /**
    * > [!CAUTION]
@@ -79,27 +76,27 @@ export class ElasticWorker<
    * @param {object} options Configuration options for the worker pool
    * @param {number} options.minWorkers Minimum number of idle workers to keep alive (default: 1)
    * @param {number} options.maxWorkers Maximum number of busy workers allowed. (default: 4)
-   * @param {number} options.maxQueueSize Maximum number of tasks to queue (default: Infinity)
+   * @param {number} options.maxTasks Maximum number of tasks allowed (default: Infinity)
    * @param {number} options.idleTimeout Time in milliseconds before an idle worker is terminated (default: 500ms)
    */
   constructor(
     workerURL: URL,
     {
       minWorkers = 1,
-      maxWorkers = 4,
-      maxQueueSize = Infinity,
-      idleTimeout,
-      terminateIdleDelay,
-    }: Partial<ElasticWorkerOptions> = {}
+      maxWorkers = 2,
+      maxTasks = Infinity,
+      TaskStore = Queue,
+      idleTimeout = 500,
+    }: ElasticWorkerOptions = {} as ElasticWorkerOptions
   ) {
     this.workerPool = new WorkerPool(workerURL, {
       minPoolSize: minWorkers,
       maxPoolSize: maxWorkers,
-      idleTimeout: idleTimeout ?? terminateIdleDelay ?? 500,
+      idleTimeout: idleTimeout,
     });
-    this.maxQueueSize = maxQueueSize;
-    this.tasks = new Queue<PendingTask>(maxQueueSize);
-    this.queue = getReadonlyProxy(this.tasks);
+    this.maxTasks = maxTasks;
+    this.tasks = new TaskStore(maxTasks);
+    this.taskStore = getReadonlyProxy(this.tasks);
   }
 
   private messageListener({ worker, resolve, reject }: MessageListenerParam) {
@@ -118,8 +115,8 @@ export class ElasticWorker<
   }
 
   private executeNextTask = () => {
-    if (this.tasks.size > 0) {
-      const task = this.tasks.dequeue();
+    if (this.tasks.count > 0) {
+      const task = this.tasks.pull();
       if (task) this.executeTask(task);
     }
   };
@@ -153,6 +150,7 @@ export class ElasticWorker<
           args,
           signal: signals,
           id: getUUID(),
+          timeout: timeoutMs,
         });
       });
     };
@@ -164,23 +162,25 @@ export class ElasticWorker<
     reject,
     resolve,
     signal,
-  }: PendingTask) => {
+    timeout,
+  }: Task) => {
     const worker = this.workerPool.getWorker();
 
     /**
      * no worker available (all busy and reached maxWorkers)
      */
     if (!worker) {
-      if (this.tasks.size >= this.maxQueueSize) {
-        return reject(new QueueOverflowError(this.maxQueueSize));
+      if (this.tasks.count >= this.maxTasks) {
+        return reject(new TaskOverflowError(this.maxTasks));
       } else
-        this.tasks.enqueue({
+        this.tasks.push({
           resolve,
           reject,
           func,
           args,
           signal,
           id,
+          timeout,
         });
     } else {
       const onAbort = (e: AbortSignalEventMap["abort"]) => {
@@ -229,11 +229,11 @@ export class ElasticWorker<
    * > Keep in mind that this will stop all workers including the workers with ongoing tasks.
    *
    * Terminates all workers and cleans up all pending tasks.
-   * This method removes all event listeners and clears the tasks queue.
+   * This method removes all event listeners and clears all tasks.
    *
    */
   terminate = () => {
-    for (const { reject } of this.tasks.values()) {
+    for (const { reject } of this.tasks.all()) {
       reject(new WorkerTerminatedError());
     }
     this.tasks.clear();

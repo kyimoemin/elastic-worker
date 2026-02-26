@@ -1,10 +1,10 @@
-import { QueueOverflowError } from "../errors";
+import { TaskOverflowError } from "../errors";
+import { Task, TaskStore } from "../types";
 
-export class Queue<T> {
-  private readonly items = new Map<number, T>();
+export class Queue implements TaskStore {
+  private readonly items = new Map<number, Task>();
   private head: number = 0;
   private tail: number = 0;
-
   readonly maxSize: number;
 
   constructor(maxSize: number = Infinity) {
@@ -13,31 +13,31 @@ export class Queue<T> {
 
   private checkOverflow() {
     if (this.items.size >= this.maxSize)
-      throw new QueueOverflowError(this.maxSize);
+      throw new TaskOverflowError(this.maxSize);
   }
   private resetCounters() {
-    if (this.size === 0) {
+    if (this.count === 0) {
       this.head = 0;
       this.tail = 0;
     }
   }
 
-  get size() {
+  get count() {
     return this.items.size;
   }
 
-  enqueue = (item: T) => {
+  push = (item: Task) => {
     this.checkOverflow();
     this.items.set(this.tail++, item);
   };
 
-  dequeue = (): T | undefined => {
+  pull = (): Task | undefined => {
     const item = this.items.get(this.head);
     this.items.delete(this.head++);
     this.resetCounters();
     return item;
   };
-  values = (): IterableIterator<T> => {
+  all = (): Iterable<Task> => {
     return this.items.values();
   };
 

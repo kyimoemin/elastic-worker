@@ -2,6 +2,7 @@ import { describe, expect, it } from "vitest";
 import { ElasticWorker } from "../../src/elastic-worker";
 import { sleep } from "../utils";
 import { Calculator } from "./type";
+import { TaskOverflowError } from "../../src/errors";
 
 describe("ElasticWorker", () => {
   const workerURL = new URL("./dummy-worker.js", import.meta.url);
@@ -73,9 +74,9 @@ describe("ElasticWorker", () => {
     await expect(promise).rejects.toThrow("Worker has been terminated");
   });
 
-  it("should throw QueueOverflowError when exceeding maxQueueSize", async () => {
+  it("should throw TaskOverflow when exceeding maxTasks", async () => {
     const smallQueueWorker = new ElasticWorker(workerURL, {
-      maxQueueSize: 2,
+      maxTasks: 2,
       maxWorkers: 1,
     });
     const add = smallQueueWorker.func("add");
@@ -85,9 +86,9 @@ describe("ElasticWorker", () => {
     await expect(
       Promise.all([
         add(3, 4), // queued
-        add(4, 5), // should throw QueueOverflowError
+        add(4, 5), // should throw TaskOverflow
       ])
-    ).rejects.toThrow("Queue limit of 2 reached");
+    ).rejects.toThrow(TaskOverflowError);
     await Promise.allSettled([p1, p2]);
     smallQueueWorker.terminate();
   });
@@ -121,18 +122,18 @@ describe("ElasticWorker", () => {
     }
   });
 
-  it("should expose read-only queue and pool proxies", () => {
-    expect(elasticWorker.queue).toBeDefined();
-    expect(elasticWorker.queue.size).toBeDefined();
+  it("should expose read-only taskStore and pool proxies", () => {
+    expect(elasticWorker.taskStore).toBeDefined();
+    expect(elasticWorker.taskStore.count).toBeDefined();
     expect(elasticWorker.pool).toBeDefined();
     expect(elasticWorker.pool.size).toBeDefined();
-    // queue
+    // taskStore
     expect(() => {
       // @ts-expect-error
-      elasticWorker.queue.set(0, {});
+      elasticWorker.taskStore.set(0, {});
     }).toThrow("This Queue is read-only (proxy blocked).");
     expect(() => {
-      elasticWorker.queue.clear();
+      elasticWorker.taskStore.clear();
     }).toThrow("This Queue is read-only (proxy blocked).");
     // pool
     expect(() => {

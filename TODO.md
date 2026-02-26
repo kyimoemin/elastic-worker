@@ -22,3 +22,14 @@
 
 - [x] changed terminateIdleDelay to idleTimeout
 - [x] stop allowing infinity timeout
+
+## 3.0.0
+
+- [x] accept `TaskStore` option
+- rename `terminateIdleDelay` to `idleTimeout`
+- rename `maxQueueSize` to `maxTasks`
+
+## next version
+
+- [ ] add Highest Priority First queue
+  - keep current FIFO, add HPF, let user choose their prefer method in the option e.g., `scheduler:"FIFO"|"HPF"`

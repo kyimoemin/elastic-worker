@@ -5,10 +5,10 @@ export class TimeoutError extends Error {
   }
 }
 
-export class QueueOverflowError extends Error {
-  constructor(maxQueueSize: number) {
-    super(`Queue limit of ${maxQueueSize} reached`);
-    this.name = "QueueOverflowError";
+export class TaskOverflowError extends Error {
+  constructor(maxTasks: number) {
+    super(`Task maximum limit of ${maxTasks} reached`);
+    this.name = "TaskOverflowError";
   }
 }
 

@@ -13,7 +13,7 @@
 - [ElasticWorker](#elasticworker)
 - [Transfer](#transfer)
 - [Errors](#errors)
-- [Benchmark](#benchmark)
+- [Benchmark](#benchmark-main-thread-vs-elasticworker-fibonacci-example)
 - [License](#license)
 
 ## Overview
@@ -120,7 +120,7 @@ const workerUrl = new URL("./worker.ts", import.meta.url);
 const elasticWorker = new ElasticWorker(workerUrl, {
   minWorkers: 2,
   maxWorkers: 4,
-  maxQueueSize: 1000,
+  maxTasks: 1000,
   idleTimeout: 1000,
 });
 ```
@@ -140,13 +140,60 @@ const elasticWorker = new ElasticWorker(workerUrl);
 
 - **minWorkers** (default: `1`) — Minimum idle workers to keep alive, prevents cold starts.
 - **maxWorkers** (default: `4`) — Maximum worker instances allowed.
-- **maxQueueSize** (default: `Infinity`) — Maximum tasks queued while workers are busy.
+- **maxTasks** (default: `Infinity`) — Maximum tasks allow for waiting while workers are busy.
 - **idleTimeout** (default: `500` ms) — Time in milliseconds before an idle worker is terminated.
+- **TaskStore** (default: `Queue`) — Custom task store constructor used to store pending tasks.
+
+### TaskStore
+
+`TaskStore` lets you plug in your own task store implementation. Provide a class that implement the interface `TaskStore` and pass it in `ElasticWorker` options.
+
+**Example**
+
+```ts
+import { ElasticWorker } from "elastic-worker";
+import type { TaskStore, Task } from "elastic-worker";
+
+class PriorityQueue implements TaskStore {
+  readonly maxSize: number;
+  private readonly items: Task[] = [];
+
+  constructor(maxSize: number = Infinity) {
+    this.maxSize = maxSize;
+  }
+
+  get count() {
+    return this.items.length;
+  }
+
+  push(item: Task) {
+    this.items.push(item);
+    this.items.sort((a, b) => a.timeout - b.timeout);
+  }
+
+  pull() {
+    return this.items.shift();
+  }
+
+  all() {
+    return this.items.values();
+  }
+
+  clear() {
+    this.items.length = 0;
+  }
+}
+
+const workerUrl = new URL("./worker.ts", import.meta.url);
+const elasticWorker = new ElasticWorker(workerUrl, {
+  TaskStore: PriorityQueue,
+});
+```
 
 ### Properties
 
 - **pool** _(read-only)_ — Current worker pool.
-- **queue** _(read-only)_ — Pending task queue.
+- **taskStore** _(read-only)_ — task store.
 
 ### Methods
 
@@ -172,7 +219,7 @@ Parameters:
 
 #### `terminate`
 
-Gracefully terminates all workers and clears the queue.  
+Gracefully terminates all workers and clears the task store.  
 Use this if you’re finished with the worker pool.
 
 ```ts
@@ -245,7 +292,7 @@ const transfer = new Transfer(
 ## Errors
 
 - **TimeoutError** — Worker call exceeded timeout
-- **QueueOverflowError** — Task queue limit reached
+- **TaskOverflowError** — `maxTasks` limit reached
 - **AbortedError** — Worker call was cancelled
 - **WorkerTerminatedError** — Worker was terminated
 - **FunctionNotFoundError** — Function not registered in worker
