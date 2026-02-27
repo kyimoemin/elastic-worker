@@ -1,6 +1,6 @@
 # CHANGELOG
 
-## 2.0.2
+## 2.0.3
 
 - [x] deprecated `terminateIdleDelay` in favor of `idleTimeout`
 - [x] `idleTimeout` no longer accepts `0`, `Infinity`, or negative values.
