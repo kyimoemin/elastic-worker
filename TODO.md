@@ -18,7 +18,7 @@
 
 - [x] remove dedicated worker
 
-## 2.0.3
+## 2.0.4
 
 - [x] changed terminateIdleDelay to idleTimeout
 - [x] stop allowing infinity timeout
