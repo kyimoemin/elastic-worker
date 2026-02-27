@@ -7,7 +7,7 @@
 - removed `QueueOverflowError` in favor of `TaskOverflowError`
 - added `TaskStore`
 
-## 2.0.2
+## 2.0.5
 
 - deprecated `terminateIdleDelay` in favor of `idleTimeout`
 - `idleTimeout` no longer accepts `0`, `Infinity`, or negative values.
